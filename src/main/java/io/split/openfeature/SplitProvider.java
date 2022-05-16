@@ -1,14 +1,20 @@
 package io.split.openfeature;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.FeatureProvider;
 import dev.openfeature.javasdk.FlagEvaluationOptions;
 import dev.openfeature.javasdk.ProviderEvaluation;
 
 import dev.openfeature.javasdk.Reason;
+import dev.openfeature.javasdk.exceptions.GeneralError;
 import io.split.client.SplitClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 public class SplitProvider implements FeatureProvider {
 
@@ -39,8 +45,8 @@ public class SplitProvider implements FeatureProvider {
         if (noTreatment(evaluated)) {
             value = defaultTreatment;
         } else {
-            // TODO: is this what we want? We only store as a string and our default is on or off... we could check for these?
-            value = Boolean.valueOf(evaluated);
+            // if treatment is "on" we treat that as true
+            value = Boolean.parseBoolean(evaluated) || evaluated.equals("on");
         }
 
         ProviderEvaluation.ProviderEvaluationBuilder<Boolean> builder = ProviderEvaluation.builder();
@@ -98,8 +104,12 @@ public class SplitProvider implements FeatureProvider {
         if (noTreatment(evaluated)) {
             value = defaultTreatment;
         } else {
-            // FIXME - is this the best thing to do
-            value = (T) evaluated;
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                value = objectMapper.readValue(evaluated, new TypeReference<T>() {});
+            } catch (JsonProcessingException e) {
+                throw new GeneralError("Error reading treatment as requested type.", e);
+            }
         }
 
         ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
@@ -111,11 +121,20 @@ public class SplitProvider implements FeatureProvider {
                 .build();
     }
 
+    public Map<String, Object> transformContext(EvaluationContext context) {
+        /* according to spec https://github.com/open-feature/spec/blob/main/specification/provider/providers.md#context-transformation
+            we should have this (public) method which translates the context into the format split expects, which is a map of attributes.
+            It is public so the client can transform context once and give it to us on calls to save us from doing it each time. (We need to modify some method signatures to allow this then?)
+         */
+        // TODO: fill in once the EvaluationContext is defined
+        return Map.of();
+    }
+
     private String evaluateTreatment(String key, EvaluationContext evaluationContext) {
         // TODO: get id from evaluation context once that class is defined, and get attributes to pass into split client
         String id = "someId";
-        // TODO: do we need the third arg map?
-        return client.getTreatment(id, key);
+        Map<String, Object> attributes = transformContext(evaluationContext);
+        return client.getTreatment(id, key, attributes);
     }
 
     private boolean noTreatment(String treatment) {

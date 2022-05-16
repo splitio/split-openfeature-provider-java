@@ -29,17 +29,17 @@ public class ImpressionsHook<T> extends Hook<T> {
 
     @Override
     public void after(HookContext<T> ctx, FlagEvaluationDetails<T> details, ImmutableMap<String, Object> hints) {
-        // TODO: constcut key from details or hints...
-        String key = null;
+        // TODO: construct key from details or hints...
+        String splitKey = null;
         // TODO constrcut label from reason?
         String label = "default rule";
         String treatmentString = String.valueOf(details.getValue());
-        sendImpression(key, ctx.getFlagKey(), treatmentString, label);
+        sendImpression(splitKey, ctx.getFlagKey(), treatmentString, label);
     }
 
 
-    private void sendImpression(String key, String flag, String treatment, String rule) {
-        TestImpressionsDTO testImpressionsDTO = constructImpressionDTO(key, flag, treatment, rule);
+    private void sendImpression(String splitKey, String flag, String treatment, String rule) {
+        TestImpressionsDTO testImpressionsDTO = constructImpressionDTO(splitKey, flag, treatment, rule);
         try {
             makePostRequest(testImpressionsDTO);
         } catch (Exception e) {
@@ -47,12 +47,12 @@ public class ImpressionsHook<T> extends Hook<T> {
         }
     }
 
-    private TestImpressionsDTO constructImpressionDTO(String key, String flag, String treatment, String label) {
+    private TestImpressionsDTO constructImpressionDTO(String splitKey, String flag, String treatment, String label) {
         return TestImpressionsDTO.builder()
                 .testName(flag)
                 .keyImpressionsDTO(List.of(
                         KeyImpressionDTO.builder()
-                                .keyId(key)
+                                .keyId(splitKey)
                                 .treatment(treatment)
                                 .time(System.currentTimeMillis())
                                 .label(label)
