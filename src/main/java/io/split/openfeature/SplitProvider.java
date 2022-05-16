@@ -3,9 +3,13 @@ package io.split.openfeature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.FeatureProvider;
+import dev.openfeature.javasdk.FlagEvaluationDetails;
 import dev.openfeature.javasdk.FlagEvaluationOptions;
+import dev.openfeature.javasdk.FlagValueType;
+import dev.openfeature.javasdk.HookContext;
 import dev.openfeature.javasdk.ProviderEvaluation;
 
 import dev.openfeature.javasdk.Reason;
@@ -17,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public class SplitProvider implements FeatureProvider {
+
+    // TODO: implement error code that we return rather than throw generic error
 
     private static final Logger _log = LoggerFactory.getLogger(SplitProvider.class);
 
@@ -40,85 +46,162 @@ public class SplitProvider implements FeatureProvider {
 
     @Override
     public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        String evaluated = evaluateTreatment(key, evaluationContext);
-        Boolean value;
-        if (noTreatment(evaluated)) {
-            value = defaultTreatment;
-        } else {
-            // if treatment is "on" we treat that as true
-            value = Boolean.parseBoolean(evaluated) || evaluated.equals("on");
-        }
+        HookContext<Boolean> context = constructContext(key, FlagValueType.BOOLEAN, evaluationContext, defaultTreatment);
+        try {
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions, context);
+            Boolean value;
+            if (noTreatment(evaluated)) {
+                value = defaultTreatment;
+            } else {
+                // if treatment is "on" we treat that as true
+                value = Boolean.parseBoolean(evaluated) || evaluated.equals("on");
+            }
+            Reason reason = Reason.SPLIT;
+            String variant = null;
+            FlagEvaluationDetails<Boolean> flagEvaluationDetails = FlagEvaluationDetails.<Boolean>builder()
+                    .flagKey(key)
+                    .value(value)
+                    .reason(reason)
+                    .variant(variant)
+                    .build();
+            runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
-        ProviderEvaluation.ProviderEvaluationBuilder<Boolean> builder = ProviderEvaluation.builder();
-        // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
-        // TODO: is there a way to get the description here to use as variant?
-        return builder
-                .value(value)
-                .reason(Reason.SPLIT)
-                .build();
+            ProviderEvaluation.ProviderEvaluationBuilder<Boolean> builder = ProviderEvaluation.builder();
+            // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
+            // TODO: is there a way to get the description here to use as variant?
+            return builder
+                    .value(value)
+                    .reason(reason)
+                    .variant(variant)
+                    .build();
+        } catch (Exception e) {
+            runErrorHooks(context, e, flagEvaluationOptions);
+            throw new GeneralError("Error getting boolean evaluation", e);
+        } finally {
+            runFinallyHooks(context, flagEvaluationOptions);
+        }
 
     }
 
     @Override
     public ProviderEvaluation<String> getStringEvaluation(String key, String defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        String evaluated = evaluateTreatment(key, evaluationContext);
-        String value;
-        if (noTreatment(evaluated)) {
-            value = defaultTreatment;
-        } else {
-            value = evaluated;
-        }
+        HookContext<String> context = constructContext(key, FlagValueType.STRING, evaluationContext, defaultTreatment);
+        try {
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions, context);
+            String value;
+            if (noTreatment(evaluated)) {
+                value = defaultTreatment;
+            } else {
+                value = evaluated;
+            }
 
-        ProviderEvaluation.ProviderEvaluationBuilder<String> builder = ProviderEvaluation.builder();
-        // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
-        // TODO: is there a way to get the description here to use as variant?
-        return builder
-                .value(value)
-                .reason(Reason.SPLIT)
-                .build();
+            Reason reason = Reason.SPLIT;
+            String variant = null;
+            FlagEvaluationDetails<String> flagEvaluationDetails = FlagEvaluationDetails.<String>builder()
+                    .flagKey(key)
+                    .value(value)
+                    .reason(reason)
+                    .variant(variant)
+                    .build();
+            runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
+
+            ProviderEvaluation.ProviderEvaluationBuilder<String> builder = ProviderEvaluation.builder();
+            // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
+            // TODO: is there a way to get the description here to use as variant?
+            return builder
+                    .value(value)
+                    .reason(reason)
+                    .variant(variant)
+                    .build();
+        } catch (Exception e) {
+            runErrorHooks(context, e, flagEvaluationOptions);
+            throw new GeneralError("Error getting String evaluation", e);
+        } finally {
+            runFinallyHooks(context, flagEvaluationOptions);
+        }
     }
 
     @Override
     public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        String evaluated = evaluateTreatment(key, evaluationContext);
-        Integer value;
-        if (noTreatment(evaluated)) {
-            value = defaultTreatment;
-        } else {
-            value = Integer.valueOf(evaluated);
-        }
+        HookContext<Integer> context = constructContext(key, FlagValueType.INTEGER, evaluationContext, defaultTreatment);
+        try {
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions, context);
+            Integer value;
+            if (noTreatment(evaluated)) {
+                value = defaultTreatment;
+            } else {
+                value = Integer.valueOf(evaluated);
+            }
 
-        ProviderEvaluation.ProviderEvaluationBuilder<Integer> builder = ProviderEvaluation.builder();
-        // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
-        // TODO: is there a way to get the description here to use as variant?
-        return builder
-                .value(value)
-                .reason(Reason.SPLIT)
-                .build();
+            Reason reason = Reason.SPLIT;
+            String variant = null;
+            FlagEvaluationDetails<Integer> flagEvaluationDetails = FlagEvaluationDetails.<Integer>builder()
+                    .flagKey(key)
+                    .value(value)
+                    .reason(reason)
+                    .variant(variant)
+                    .build();
+            runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
+
+            ProviderEvaluation.ProviderEvaluationBuilder<Integer> builder = ProviderEvaluation.builder();
+            // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
+            // TODO: is there a way to get the description here to use as variant?
+            return builder
+                    .value(value)
+                    .reason(reason)
+                    .variant(variant)
+                    .build();
+        } catch (Exception e) {
+            runErrorHooks(context, e, flagEvaluationOptions);
+            throw new GeneralError("Error getting Integer evaluation", e);
+        } finally {
+            runFinallyHooks(context, flagEvaluationOptions);
+        }
     }
 
     // Should this be a part of the interface??
     public <T> ProviderEvaluation<T> getEvaluation(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        String evaluated = evaluateTreatment(key, evaluationContext);
-        T value;
-        if (noTreatment(evaluated)) {
-            value = defaultTreatment;
-        } else {
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                value = objectMapper.readValue(evaluated, new TypeReference<T>() {});
-            } catch (JsonProcessingException e) {
-                throw new GeneralError("Error reading treatment as requested type.", e);
-            }
-        }
+        HookContext<T> context = constructContext(key, FlagValueType.OBJECT, evaluationContext, defaultTreatment);
 
-        ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
-        // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
-        // TODO: is there a way to get the description here to use as variant?
-        return builder
-                .value(value)
-                .reason(Reason.SPLIT)
-                .build();
+        try {
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions, context);
+            T value;
+            if (noTreatment(evaluated)) {
+                value = defaultTreatment;
+            } else {
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    value = objectMapper.readValue(evaluated, new TypeReference<T>() {
+                    });
+                } catch (JsonProcessingException e) {
+                    throw new GeneralError("Error reading treatment as requested type.", e);
+                }
+            }
+
+            Reason reason = Reason.SPLIT;
+            String variant = null;
+            FlagEvaluationDetails<T> flagEvaluationDetails = FlagEvaluationDetails.<T>builder()
+                    .flagKey(key)
+                    .value(value)
+                    .reason(reason)
+                    .variant(variant)
+                    .build();
+            runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
+
+            ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
+            // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
+            // TODO: is there a way to get the description here to use as variant?
+            return builder
+                    .value(value)
+                    .reason(reason)
+                    .variant(variant)
+                    .build();
+        } catch (Exception e) {
+            runErrorHooks(context, e, flagEvaluationOptions);
+            throw new GeneralError("Error getting Object evaluation", e);
+        } finally {
+            runFinallyHooks(context, flagEvaluationOptions);
+        }
     }
 
     public Map<String, Object> transformContext(EvaluationContext context) {
@@ -130,14 +213,54 @@ public class SplitProvider implements FeatureProvider {
         return Map.of();
     }
 
-    private String evaluateTreatment(String key, EvaluationContext evaluationContext) {
+    private <T> String evaluateTreatment(String key, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions, HookContext<T> hookContext) {
+        // first run before hooks
+        runBeforeHooks(hookContext, flagEvaluationOptions);
         // TODO: get id from evaluation context once that class is defined, and get attributes to pass into split client
         String id = "someId";
         Map<String, Object> attributes = transformContext(evaluationContext);
-        return client.getTreatment(id, key, attributes);
+        String treatment = client.getTreatment(id, key, attributes);
+        // run after hooks
+        return treatment;
     }
 
     private boolean noTreatment(String treatment) {
         return treatment == null || treatment.isEmpty() || treatment.equals("control");
+    }
+
+    /* Run Hooks. Not to sure this is supposed to be done in Provider (but I think so). */
+    // TODO:
+
+    private <T> HookContext<T> constructContext(String flag, FlagValueType flagType, EvaluationContext evaluationContext, T defaultValue) {
+        return HookContext.<T>builder()
+                .flagKey(flag)
+                .type(flagType)
+                .ctx(evaluationContext)
+                .defaultValue(defaultValue)
+                .build();
+    }
+
+    private <T> void runBeforeHooks(HookContext<T> hookContext, FlagEvaluationOptions flagEvaluationOptions) {
+        ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
+        flagEvaluationOptions.getHooks()
+                .forEach(hook -> hook.before(hookContext, hookHints));
+    }
+
+    private <T> void runAfterHooks(HookContext<T> hookContext, FlagEvaluationDetails<T> flagEvaluationDetails, FlagEvaluationOptions flagEvaluationOptions) {
+        ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
+        flagEvaluationOptions.getHooks()
+                .forEach(hook -> hook.after(hookContext, flagEvaluationDetails, hookHints));
+    }
+
+    private <T> void runErrorHooks(HookContext<T> hookContext, Exception e, FlagEvaluationOptions flagEvaluationOptions) {
+        ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
+        flagEvaluationOptions.getHooks()
+                .forEach(hook -> hook.error(hookContext, e, hookHints));
+    }
+
+    private <T> void runFinallyHooks(HookContext<T> hookContext, FlagEvaluationOptions flagEvaluationOptions) {
+        ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
+        flagEvaluationOptions.getHooks()
+                .forEach(hook -> hook.finallyAfter(hookContext, hookHints));
     }
 }
