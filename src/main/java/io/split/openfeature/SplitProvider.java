@@ -57,12 +57,11 @@ public class SplitProvider implements FeatureProvider {
                 value = Boolean.parseBoolean(evaluated) || evaluated.equals("on");
             }
             Reason reason = Reason.SPLIT;
-            String variant = null;
             FlagEvaluationDetails<Boolean> flagEvaluationDetails = FlagEvaluationDetails.<Boolean>builder()
                     .flagKey(key)
                     .value(value)
                     .reason(reason)
-                    .variant(variant)
+                    .variant(evaluated)
                     .build();
             runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
@@ -72,7 +71,7 @@ public class SplitProvider implements FeatureProvider {
             return builder
                     .value(value)
                     .reason(reason)
-                    .variant(variant)
+                    .variant(evaluated)
                     .build();
         } catch (Exception e) {
             runErrorHooks(context, e, flagEvaluationOptions);
@@ -96,12 +95,11 @@ public class SplitProvider implements FeatureProvider {
             }
 
             Reason reason = Reason.SPLIT;
-            String variant = null;
             FlagEvaluationDetails<String> flagEvaluationDetails = FlagEvaluationDetails.<String>builder()
                     .flagKey(key)
                     .value(value)
                     .reason(reason)
-                    .variant(variant)
+                    .variant(evaluated)
                     .build();
             runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
@@ -111,7 +109,7 @@ public class SplitProvider implements FeatureProvider {
             return builder
                     .value(value)
                     .reason(reason)
-                    .variant(variant)
+                    .variant(evaluated)
                     .build();
         } catch (Exception e) {
             runErrorHooks(context, e, flagEvaluationOptions);
@@ -134,12 +132,11 @@ public class SplitProvider implements FeatureProvider {
             }
 
             Reason reason = Reason.SPLIT;
-            String variant = null;
             FlagEvaluationDetails<Integer> flagEvaluationDetails = FlagEvaluationDetails.<Integer>builder()
                     .flagKey(key)
                     .value(value)
                     .reason(reason)
-                    .variant(variant)
+                    .variant(evaluated)
                     .build();
             runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
@@ -149,7 +146,7 @@ public class SplitProvider implements FeatureProvider {
             return builder
                     .value(value)
                     .reason(reason)
-                    .variant(variant)
+                    .variant(evaluated)
                     .build();
         } catch (Exception e) {
             runErrorHooks(context, e, flagEvaluationOptions);
@@ -179,12 +176,11 @@ public class SplitProvider implements FeatureProvider {
             }
 
             Reason reason = Reason.SPLIT;
-            String variant = null;
             FlagEvaluationDetails<T> flagEvaluationDetails = FlagEvaluationDetails.<T>builder()
                     .flagKey(key)
                     .value(value)
                     .reason(reason)
-                    .variant(variant)
+                    .variant(evaluated)
                     .build();
             runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
@@ -194,7 +190,7 @@ public class SplitProvider implements FeatureProvider {
             return builder
                     .value(value)
                     .reason(reason)
-                    .variant(variant)
+                    .variant(evaluated)
                     .build();
         } catch (Exception e) {
             runErrorHooks(context, e, flagEvaluationOptions);
