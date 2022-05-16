@@ -6,47 +6,25 @@ import dev.openfeature.javasdk.FlagEvaluationOptions;
 import dev.openfeature.javasdk.ProviderEvaluation;
 
 import dev.openfeature.javasdk.Reason;
-import io.split.client.SplitFactoryBuilder;
 import io.split.client.SplitClient;
-import io.split.client.SplitClientConfig;
-import io.split.client.SplitFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.concurrent.TimeoutException;
 
 public class SplitProvider implements FeatureProvider {
 
     private static final Logger _log = LoggerFactory.getLogger(SplitProvider.class);
 
-    private String name;
-    private SplitClient client;
+    private final String name;
+    private final SplitClient client;
 
     // Interesting that we have to define a constructor... would it make more sense for feature provider to be an abstract class with constructor instead of interface?
     public SplitProvider(String apiKey) {
         this.name = "split";
-
-        SplitClientConfig config = SplitClientConfig.builder()
-                .setBlockUntilReadyTimeout(10000)
-                .build();
-        SplitFactory splitFactory;
-        try {
-            splitFactory = SplitFactoryBuilder.build(apiKey, config);
-        } catch (IOException | URISyntaxException e) {
-            // exception occurred
-            _log.error("Error occurred creating split factory", e);
-            throw new RuntimeException("Error occurred creating split factory", e);
+        SplitModule splitModule = SplitModule.getInstance();
+        if (splitModule.getClient() == null) {
+            splitModule.init(apiKey);
         }
-        this.client = splitFactory.client();
-        try {
-            this.client.blockUntilReady();
-        } catch (TimeoutException | InterruptedException e) {
-            // log & handle
-            _log.error("Error occurred initializing the client.", e);
-            throw new RuntimeException("Error occurred creating split factory", e);
-        }
+        client = splitModule.getClient();
     }
 
     @Override
@@ -133,7 +111,7 @@ public class SplitProvider implements FeatureProvider {
     }
 
     private String evaluateTreatment(String key, EvaluationContext evaluationContext) {
-        // TODO: get id from evaluation context once that class is defined
+        // TODO: get id from evaluation context once that class is defined, and get attributes to pass into split client
         String id = "someId";
         // TODO: do we need the third arg map?
         return client.getTreatment(id, key);
