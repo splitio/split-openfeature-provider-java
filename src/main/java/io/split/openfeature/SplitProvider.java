@@ -36,9 +36,10 @@ public class SplitProvider implements FeatureProvider {
     public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         String evaluated = evaluateTreatment(key, evaluationContext);
         Boolean value;
-        if (evaluated == null || evaluated.isEmpty()) {
+        if (noTreatment(evaluated)) {
             value = defaultTreatment;
         } else {
+            // TODO: is this what we want? We only store as a string and our default is on or off... we could check for these?
             value = Boolean.valueOf(evaluated);
         }
 
@@ -56,7 +57,7 @@ public class SplitProvider implements FeatureProvider {
     public ProviderEvaluation<String> getStringEvaluation(String key, String defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         String evaluated = evaluateTreatment(key, evaluationContext);
         String value;
-        if (evaluated == null || evaluated.isEmpty()) {
+        if (noTreatment(evaluated)) {
             value = defaultTreatment;
         } else {
             value = evaluated;
@@ -75,7 +76,7 @@ public class SplitProvider implements FeatureProvider {
     public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         String evaluated = evaluateTreatment(key, evaluationContext);
         Integer value;
-        if (evaluated == null || evaluated.isEmpty()) {
+        if (noTreatment(evaluated)) {
             value = defaultTreatment;
         } else {
             value = Integer.valueOf(evaluated);
@@ -94,7 +95,7 @@ public class SplitProvider implements FeatureProvider {
     public <T> ProviderEvaluation<T> getEvaluation(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         String evaluated = evaluateTreatment(key, evaluationContext);
         T value;
-        if (evaluated == null || evaluated.isEmpty()) {
+        if (noTreatment(evaluated)) {
             value = defaultTreatment;
         } else {
             // FIXME - is this the best thing to do
@@ -115,5 +116,9 @@ public class SplitProvider implements FeatureProvider {
         String id = "someId";
         // TODO: do we need the third arg map?
         return client.getTreatment(id, key);
+    }
+
+    private boolean noTreatment(String treatment) {
+        return treatment == null || treatment.isEmpty() || treatment.equals("control");
     }
 }
