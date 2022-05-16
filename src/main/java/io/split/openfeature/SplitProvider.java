@@ -15,16 +15,12 @@ import dev.openfeature.javasdk.ProviderEvaluation;
 import dev.openfeature.javasdk.Reason;
 import dev.openfeature.javasdk.exceptions.GeneralError;
 import io.split.client.SplitClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class SplitProvider implements FeatureProvider {
 
     // TODO: implement error code that we return rather than throw generic error
-
-    private static final Logger _log = LoggerFactory.getLogger(SplitProvider.class);
 
     private final String name;
     private final SplitClient client;
@@ -66,8 +62,6 @@ public class SplitProvider implements FeatureProvider {
             runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
             ProviderEvaluation.ProviderEvaluationBuilder<Boolean> builder = ProviderEvaluation.builder();
-            // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
-            // TODO: is there a way to get the description here to use as variant?
             return builder
                     .value(value)
                     .reason(reason)
@@ -104,8 +98,6 @@ public class SplitProvider implements FeatureProvider {
             runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
             ProviderEvaluation.ProviderEvaluationBuilder<String> builder = ProviderEvaluation.builder();
-            // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
-            // TODO: is there a way to get the description here to use as variant?
             return builder
                     .value(value)
                     .reason(reason)
@@ -141,8 +133,6 @@ public class SplitProvider implements FeatureProvider {
             runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
             ProviderEvaluation.ProviderEvaluationBuilder<Integer> builder = ProviderEvaluation.builder();
-            // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
-            // TODO: is there a way to get the description here to use as variant?
             return builder
                     .value(value)
                     .reason(reason)
@@ -166,13 +156,7 @@ public class SplitProvider implements FeatureProvider {
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
             } else {
-                try {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    value = objectMapper.readValue(evaluated, new TypeReference<T>() {
-                    });
-                } catch (JsonProcessingException e) {
-                    throw new GeneralError("Error reading treatment as requested type.", e);
-                }
+                value = convertType(evaluated, new TypeReference<T>() {});
             }
 
             Reason reason = Reason.SPLIT;
@@ -185,8 +169,6 @@ public class SplitProvider implements FeatureProvider {
             runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
 
             ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
-            // TODO: Is there a way to get the reason? Something like DEFAULT or SPLIT?
-            // TODO: is there a way to get the description here to use as variant?
             return builder
                     .value(value)
                     .reason(reason)
@@ -212,12 +194,10 @@ public class SplitProvider implements FeatureProvider {
     private <T> String evaluateTreatment(String key, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions, HookContext<T> hookContext) {
         // first run before hooks
         runBeforeHooks(hookContext, flagEvaluationOptions);
-        // TODO: get id from evaluation context once that class is defined, and get attributes to pass into split client
+        // TODO: get id from evaluation context once that class is defined
         String id = "someId";
         Map<String, Object> attributes = transformContext(evaluationContext);
-        String treatment = client.getTreatment(id, key, attributes);
-        // run after hooks
-        return treatment;
+        return client.getTreatment(id, key, attributes);
     }
 
     private boolean noTreatment(String treatment) {
@@ -258,5 +238,14 @@ public class SplitProvider implements FeatureProvider {
         ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
         flagEvaluationOptions.getHooks()
                 .forEach(hook -> hook.finallyAfter(hookContext, hookHints));
+    }
+
+    private <T> T convertType(String string, TypeReference<T> typeReference) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(string, typeReference);
+        } catch (JsonProcessingException e) {
+            throw new GeneralError("Error reading treatment as requested type.", e);
+        }
     }
 }
