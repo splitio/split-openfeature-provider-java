@@ -20,8 +20,6 @@ import java.util.Map;
 
 public class SplitProvider implements FeatureProvider {
 
-    // TODO: implement error code that we return rather than throw generic error
-
     private final String name;
     private final SplitClient client;
 
