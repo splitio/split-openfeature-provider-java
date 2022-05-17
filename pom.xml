@@ -41,6 +41,16 @@
       <artifactId>dtos-public</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.13</version>
+    </dependency>
+    <dependency>
+      <groupId>io.split.integrations.azure</groupId>
+      <artifactId>impressions-listener</artifactId>
+      <version>0.9.1</version>
+    </dependency>
   </dependencies>
 
   <build>
