@@ -37,11 +37,6 @@
       <version>4.4.3</version>
     </dependency>
     <dependency>
-      <groupId>io.codigo.schemas</groupId>
-      <artifactId>dtos-public</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.5.13</version>

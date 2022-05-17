@@ -4,16 +4,13 @@ import dev.openfeature.javasdk.exceptions.GeneralError;
 import io.split.client.SplitClientConfig;
 import io.split.client.SplitFactory;
 import io.split.client.SplitFactoryBuilder;
-import io.split.integrations.IntegrationsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 
-@Singleton
 public class SplitModule {
     private static final Logger _log = LoggerFactory.getLogger(SplitModule.class);
 

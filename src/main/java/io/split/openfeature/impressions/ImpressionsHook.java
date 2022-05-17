@@ -26,9 +26,8 @@ public class ImpressionsHook<T> extends Hook<T> {
         if (impressionListener == null) {
             impressionListener = new ImpressionListenerImpl(properties);
         }
-        // do we construct par
-        // TODO: construct key from details
-        String splitKey = null;
+        // FIXME: once eval context is defined we need to use it to get the split key
+        String splitKey = ctx.getCtx().toString();
         String treatmentString = String.valueOf(details.getValue());
         String source = ctx.getProvider().getName();
         sendImpression(splitKey, ctx.getFlagKey(), treatmentString, source);

@@ -30,10 +30,6 @@ public class ImpressionListenerImpl {
         }
     }
 
-    public ImpressionListenerImpl getImpressionListenerImpl() {
-        return this;
-    }
-
     public void handleImpression(String key, String feature, String treatment, String source) {
         source = source.toUpperCase();
         String rule = "default rule"; // For now, always assume the default rule
