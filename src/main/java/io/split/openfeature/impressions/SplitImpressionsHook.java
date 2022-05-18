@@ -9,14 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ImpressionsHook<T> extends Hook<T> {
+public class SplitImpressionsHook<T> extends Hook<T> {
 
-    private static final Logger _log = LoggerFactory.getLogger(ImpressionsHook.class);
+    private static final Logger _log = LoggerFactory.getLogger(SplitImpressionsHook.class);
 
     ImpressionListenerProperties properties = null;
     ImpressionListenerImpl impressionListener = null;
 
-    public ImpressionsHook() {}
+    public SplitImpressionsHook() {}
 
     @Override
     public void after(HookContext<T> ctx, FlagEvaluationDetails<T> details, ImmutableMap<String, Object> hints) {
