@@ -3,13 +3,9 @@ package io.split.openfeature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.FeatureProvider;
-import dev.openfeature.javasdk.FlagEvaluationDetails;
 import dev.openfeature.javasdk.FlagEvaluationOptions;
-import dev.openfeature.javasdk.FlagValueType;
-import dev.openfeature.javasdk.HookContext;
 import dev.openfeature.javasdk.ProviderEvaluation;
 
 import dev.openfeature.javasdk.Reason;
@@ -40,9 +36,8 @@ public class SplitProvider implements FeatureProvider {
 
     @Override
     public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        HookContext<Boolean> context = constructContext(key, FlagValueType.BOOLEAN, evaluationContext, defaultTreatment);
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions, context);
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
             Boolean value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -51,14 +46,6 @@ public class SplitProvider implements FeatureProvider {
                 value = Boolean.parseBoolean(evaluated) || evaluated.equals("on");
             }
             Reason reason = Reason.SPLIT;
-            FlagEvaluationDetails<Boolean> flagEvaluationDetails = FlagEvaluationDetails.<Boolean>builder()
-                    .flagKey(key)
-                    .value(value)
-                    .reason(reason)
-                    .variant(evaluated)
-                    .build();
-            runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
-
             ProviderEvaluation.ProviderEvaluationBuilder<Boolean> builder = ProviderEvaluation.builder();
             return builder
                     .value(value)
@@ -66,19 +53,15 @@ public class SplitProvider implements FeatureProvider {
                     .variant(evaluated)
                     .build();
         } catch (Exception e) {
-            runErrorHooks(context, e, flagEvaluationOptions);
             throw new GeneralError("Error getting boolean evaluation", e);
-        } finally {
-            runFinallyHooks(context, flagEvaluationOptions);
         }
 
     }
 
     @Override
     public ProviderEvaluation<String> getStringEvaluation(String key, String defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        HookContext<String> context = constructContext(key, FlagValueType.STRING, evaluationContext, defaultTreatment);
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions, context);
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
             String value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -87,14 +70,6 @@ public class SplitProvider implements FeatureProvider {
             }
 
             Reason reason = Reason.SPLIT;
-            FlagEvaluationDetails<String> flagEvaluationDetails = FlagEvaluationDetails.<String>builder()
-                    .flagKey(key)
-                    .value(value)
-                    .reason(reason)
-                    .variant(evaluated)
-                    .build();
-            runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
-
             ProviderEvaluation.ProviderEvaluationBuilder<String> builder = ProviderEvaluation.builder();
             return builder
                     .value(value)
@@ -102,18 +77,14 @@ public class SplitProvider implements FeatureProvider {
                     .variant(evaluated)
                     .build();
         } catch (Exception e) {
-            runErrorHooks(context, e, flagEvaluationOptions);
             throw new GeneralError("Error getting String evaluation", e);
-        } finally {
-            runFinallyHooks(context, flagEvaluationOptions);
         }
     }
 
     @Override
     public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        HookContext<Integer> context = constructContext(key, FlagValueType.INTEGER, evaluationContext, defaultTreatment);
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions, context);
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
             Integer value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -122,14 +93,6 @@ public class SplitProvider implements FeatureProvider {
             }
 
             Reason reason = Reason.SPLIT;
-            FlagEvaluationDetails<Integer> flagEvaluationDetails = FlagEvaluationDetails.<Integer>builder()
-                    .flagKey(key)
-                    .value(value)
-                    .reason(reason)
-                    .variant(evaluated)
-                    .build();
-            runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
-
             ProviderEvaluation.ProviderEvaluationBuilder<Integer> builder = ProviderEvaluation.builder();
             return builder
                     .value(value)
@@ -137,19 +100,14 @@ public class SplitProvider implements FeatureProvider {
                     .variant(evaluated)
                     .build();
         } catch (Exception e) {
-            runErrorHooks(context, e, flagEvaluationOptions);
             throw new GeneralError("Error getting Integer evaluation", e);
-        } finally {
-            runFinallyHooks(context, flagEvaluationOptions);
         }
     }
 
     // Should this be a part of the interface??
     public <T> ProviderEvaluation<T> getEvaluation(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        HookContext<T> context = constructContext(key, FlagValueType.OBJECT, evaluationContext, defaultTreatment);
-
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions, context);
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
             T value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -158,14 +116,6 @@ public class SplitProvider implements FeatureProvider {
             }
 
             Reason reason = Reason.SPLIT;
-            FlagEvaluationDetails<T> flagEvaluationDetails = FlagEvaluationDetails.<T>builder()
-                    .flagKey(key)
-                    .value(value)
-                    .reason(reason)
-                    .variant(evaluated)
-                    .build();
-            runAfterHooks(context, flagEvaluationDetails, flagEvaluationOptions);
-
             ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
             return builder
                     .value(value)
@@ -173,10 +123,7 @@ public class SplitProvider implements FeatureProvider {
                     .variant(evaluated)
                     .build();
         } catch (Exception e) {
-            runErrorHooks(context, e, flagEvaluationOptions);
             throw new GeneralError("Error getting Object evaluation", e);
-        } finally {
-            runFinallyHooks(context, flagEvaluationOptions);
         }
     }
 
@@ -189,9 +136,7 @@ public class SplitProvider implements FeatureProvider {
         return Map.of();
     }
 
-    private <T> String evaluateTreatment(String key, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions, HookContext<T> hookContext) {
-        // first run before hooks
-        runBeforeHooks(hookContext, flagEvaluationOptions);
+    private String evaluateTreatment(String key, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         // TODO: get id from evaluation context once that class is defined
         String id = "someId";
         Map<String, Object> attributes = transformContext(evaluationContext);
@@ -200,42 +145,6 @@ public class SplitProvider implements FeatureProvider {
 
     private boolean noTreatment(String treatment) {
         return treatment == null || treatment.isEmpty() || treatment.equals("control");
-    }
-
-    /* Run Hooks. Not to sure this is supposed to be done in Provider (but I think so). */
-    // TODO:
-
-    private <T> HookContext<T> constructContext(String flag, FlagValueType flagType, EvaluationContext evaluationContext, T defaultValue) {
-        return HookContext.<T>builder()
-                .flagKey(flag)
-                .type(flagType)
-                .ctx(evaluationContext)
-                .defaultValue(defaultValue)
-                .build();
-    }
-
-    private <T> void runBeforeHooks(HookContext<T> hookContext, FlagEvaluationOptions flagEvaluationOptions) {
-        ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
-        flagEvaluationOptions.getHooks()
-                .forEach(hook -> hook.before(hookContext, hookHints));
-    }
-
-    private <T> void runAfterHooks(HookContext<T> hookContext, FlagEvaluationDetails<T> flagEvaluationDetails, FlagEvaluationOptions flagEvaluationOptions) {
-        ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
-        flagEvaluationOptions.getHooks()
-                .forEach(hook -> hook.after(hookContext, flagEvaluationDetails, hookHints));
-    }
-
-    private <T> void runErrorHooks(HookContext<T> hookContext, Exception e, FlagEvaluationOptions flagEvaluationOptions) {
-        ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
-        flagEvaluationOptions.getHooks()
-                .forEach(hook -> hook.error(hookContext, e, hookHints));
-    }
-
-    private <T> void runFinallyHooks(HookContext<T> hookContext, FlagEvaluationOptions flagEvaluationOptions) {
-        ImmutableMap<String, Object> hookHints = flagEvaluationOptions.getHookHints();
-        flagEvaluationOptions.getHooks()
-                .forEach(hook -> hook.finallyAfter(hookContext, hookHints));
     }
 
     private <T> T convertType(String string, TypeReference<T> typeReference) {
