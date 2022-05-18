@@ -7,7 +7,6 @@ import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.FeatureProvider;
 import dev.openfeature.javasdk.FlagEvaluationOptions;
 import dev.openfeature.javasdk.ProviderEvaluation;
-
 import dev.openfeature.javasdk.Reason;
 import dev.openfeature.javasdk.exceptions.GeneralError;
 import io.split.client.SplitClient;
