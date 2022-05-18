@@ -15,12 +15,9 @@ import java.util.List;
 
 public class ImpressionListenerImpl {
 
-    private transient ImpressionListenerProperties properties;
-
     private ImpressionsManager impressionsManager;
 
     public ImpressionListenerImpl(ImpressionListenerProperties properties) {
-        this.properties = properties;
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             ImpressionsStorage storage = new InMemoryImpressionsStorage(30000);

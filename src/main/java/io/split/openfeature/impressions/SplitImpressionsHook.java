@@ -12,20 +12,23 @@ import org.slf4j.LoggerFactory;
 public class SplitImpressionsHook<T> extends Hook<T> {
 
     private static final Logger _log = LoggerFactory.getLogger(SplitImpressionsHook.class);
+    private static final String DEFAULT_IMPRESSIONS_URL = "https://events.split-stage.io";
 
-    ImpressionListenerProperties properties = null;
-    ImpressionListenerImpl impressionListener = null;
+    private final ImpressionListenerImpl impressionListener;
 
-    public SplitImpressionsHook() {}
+    public SplitImpressionsHook(String apiToken) {
+        this(apiToken, DEFAULT_IMPRESSIONS_URL);
+    }
+
+    public SplitImpressionsHook(String apiToken, String impressionsUrl) {
+        ImpressionListenerProperties properties = new ImpressionListenerProperties();
+        properties.setApiToken(apiToken);
+        properties.setImpressionsUrl(impressionsUrl);
+        this.impressionListener = new ImpressionListenerImpl(properties);
+    }
 
     @Override
     public void after(HookContext<T> ctx, FlagEvaluationDetails<T> details, ImmutableMap<String, Object> hints) {
-        if (properties == null) {
-            setProperties(hints);
-        }
-        if (impressionListener == null) {
-            impressionListener = new ImpressionListenerImpl(properties);
-        }
         // FIXME: once eval context is defined we need to use it to get the split key
         String splitKey = ctx.getCtx().toString();
         String treatmentString = String.valueOf(details.getValue());
@@ -39,11 +42,5 @@ public class SplitImpressionsHook<T> extends Hook<T> {
         } catch (Exception e) {
             _log.error("Error sending impression");
         }
-    }
-
-    private void setProperties(ImmutableMap<String, Object> hints) {
-        properties = new ImpressionListenerProperties();
-        properties.setApiToken((String) hints.get("apiToken"));
-        properties.setImpressionsUrl((String) hints.get("impressionsUrl"));
     }
 }
