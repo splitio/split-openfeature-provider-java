@@ -10,17 +10,22 @@ import dev.openfeature.javasdk.ProviderEvaluation;
 import dev.openfeature.javasdk.Reason;
 import dev.openfeature.javasdk.exceptions.GeneralError;
 import io.split.client.SplitClient;
+import io.split.openfeature.utils.Serialization;
 
 import java.util.Map;
 
 public class SplitProvider implements FeatureProvider {
 
-    private final String name;
+    private static final String NAME = "split";
+
     private final SplitClient client;
+
+    public SplitProvider(SplitClient splitClient) {
+        client = splitClient;
+    }
 
     // Interesting that we have to define a constructor... would it make more sense for feature provider to be an abstract class with constructor instead of interface?
     public SplitProvider(String apiKey) {
-        this.name = "split";
         SplitModule splitModule = SplitModule.getInstance();
         if (splitModule.getClient() == null) {
             splitModule.init(apiKey);
@@ -30,7 +35,7 @@ public class SplitProvider implements FeatureProvider {
 
     @Override
     public String getName() {
-        return this.name;
+        return NAME;
     }
 
     @Override
@@ -41,8 +46,16 @@ public class SplitProvider implements FeatureProvider {
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
             } else {
-                // if treatment is "on" we treat that as true
-                value = Boolean.parseBoolean(evaluated) || evaluated.equals("on");
+                // if treatment is "on" we treat that as true or if it is true
+                // if it is false of off we treat it as false
+                // if it is some other value we throw an error (sdk will catch it and throw default treatment)
+                if (Boolean.parseBoolean(evaluated) || evaluated.equals("on")) {
+                    value = true;
+                } else if (evaluated.equalsIgnoreCase("false") || evaluated.equals("off")) {
+                    value = false;
+                } else {
+                    throw new GeneralError("Error: Can not cast treatment to a boolean");
+                }
             }
             Reason reason = Reason.SPLIT;
             ProviderEvaluation.ProviderEvaluationBuilder<Boolean> builder = ProviderEvaluation.builder();
@@ -104,14 +117,14 @@ public class SplitProvider implements FeatureProvider {
     }
 
     // Should this be a part of the interface??
-    public <T> ProviderEvaluation<T> getEvaluation(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+    public <T> ProviderEvaluation<T> getStructureValue(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         try {
             String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
             T value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
             } else {
-                value = convertType(evaluated, new TypeReference<T>() {});
+                value = Serialization.deserialize(evaluated, new TypeReference<T>() {});
             }
 
             Reason reason = Reason.SPLIT;
@@ -144,14 +157,5 @@ public class SplitProvider implements FeatureProvider {
 
     private boolean noTreatment(String treatment) {
         return treatment == null || treatment.isEmpty() || treatment.equals("control");
-    }
-
-    private <T> T convertType(String string, TypeReference<T> typeReference) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(string, typeReference);
-        } catch (JsonProcessingException e) {
-            throw new GeneralError("Error reading treatment as requested type.", e);
-        }
     }
 }
