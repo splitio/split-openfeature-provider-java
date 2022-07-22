@@ -5,10 +5,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.split.openfeature</groupId>
-  <artifactId>split-java-provider</artifactId>
+  <artifactId>split-openfeature-provider</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>split-java-provider</name>
+  <name>split-openfeature-java-provider</name>
   <!-- FIXME change it to the project's website -->
   <url>http://www.example.com</url>
 
