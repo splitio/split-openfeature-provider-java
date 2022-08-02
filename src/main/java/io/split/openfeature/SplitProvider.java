@@ -1,11 +1,10 @@
 package io.split.openfeature;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.FeatureProvider;
 import dev.openfeature.javasdk.FlagEvaluationOptions;
+import dev.openfeature.javasdk.Metadata;
 import dev.openfeature.javasdk.ProviderEvaluation;
 import dev.openfeature.javasdk.Reason;
 import dev.openfeature.javasdk.exceptions.GeneralError;
@@ -34,8 +33,8 @@ public class SplitProvider implements FeatureProvider {
     }
 
     @Override
-    public String getName() {
-        return NAME;
+    public Metadata getMetadata() {
+        return () -> "No-op Provider";
     }
 
     @Override
@@ -116,8 +115,8 @@ public class SplitProvider implements FeatureProvider {
         }
     }
 
-    // Should this be a part of the interface??
-    public <T> ProviderEvaluation<T> getStructureValue(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+    @Override
+    public <T> ProviderEvaluation<T> getObjectEvaluation(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         try {
             String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
             T value;

@@ -2,19 +2,15 @@ package io.split.openfeature;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import dev.openfeature.javasdk.FlagEvaluationOptions;
 import dev.openfeature.javasdk.ProviderEvaluation;
-import dev.openfeature.javasdk.Reason;
 import dev.openfeature.javasdk.exceptions.GeneralError;
 import io.split.client.SplitClient;
 import io.split.openfeature.utils.Serialization;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -287,12 +283,12 @@ public class SplitProviderTest {
 
         when(mockSplitClient.getTreatment(anyString(), eq(flagName), anyMap())).thenReturn(null);
 
-        ProviderEvaluation<Map<String, Object>> response = splitProvider.getStructureValue(flagName, defaultTreatment, null, null);
+        ProviderEvaluation<Map<String, Object>> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, null, null);
         assertEquals(defaultTreatment, response.getValue());
 
         when(mockSplitClient.getTreatment(anyString(), eq(flagName), anyMap())).thenReturn("");
 
-        response = splitProvider.getStructureValue(flagName, defaultTreatment, null, null);
+        response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, null, null);
         assertEquals(defaultTreatment, response.getValue());
     }
 
@@ -306,7 +302,7 @@ public class SplitProviderTest {
 
         when(mockSplitClient.getTreatment(anyString(), eq(flagName), anyMap())).thenReturn("control");
 
-        ProviderEvaluation<Map<String, Object>> response = splitProvider.getStructureValue(flagName, defaultTreatment, null, null);
+        ProviderEvaluation<Map<String, Object>> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, null, null);
         assertEquals(defaultTreatment, response.getValue());
     }
 
@@ -324,7 +320,7 @@ public class SplitProviderTest {
             fail("Unexpected exception occurred: ", e);
         }
 
-        ProviderEvaluation<Map<String, Object>> response = splitProvider.getStructureValue(flagName, Map.of("foo", "bar"), null, null);
+        ProviderEvaluation<Map<String, Object>> response = splitProvider.getObjectEvaluation(flagName, Map.of("foo", "bar"), null, null);
         assertEquals(treatment, response.getValue());
     }
 
@@ -339,7 +335,7 @@ public class SplitProviderTest {
         when(mockSplitClient.getTreatment(anyString(), eq(flagName), anyMap())).thenReturn(treatment);
 
         try {
-            ProviderEvaluation<Map<String, Object>> response = splitProvider.getStructureValue(flagName, Map.of("foo", "bar"), null, null);
+            ProviderEvaluation<Map<String, Object>> response = splitProvider.getObjectEvaluation(flagName, Map.of("foo", "bar"), null, null);
             fail("Should have thrown an exception casting string to an object");
         } catch (GeneralError e) {
             assertEquals("Error getting Object evaluation", e.getMessage());

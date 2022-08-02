@@ -1,6 +1,5 @@
 package io.split.openfeature.impressions;
 
-import com.google.common.collect.ImmutableMap;
 import dev.openfeature.javasdk.FlagEvaluationDetails;
 import dev.openfeature.javasdk.Hook;
 import dev.openfeature.javasdk.HookContext;
@@ -8,8 +7,10 @@ import io.split.integrations.azure.ImpressionListenerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 
-public class SplitImpressionsHook<T> extends Hook<T> {
+
+public class SplitImpressionsHook<T> implements Hook<T> {
 
     private static final Logger _log = LoggerFactory.getLogger(SplitImpressionsHook.class);
     private static final String DEFAULT_IMPRESSIONS_URL = "https://events.split-stage.io";
@@ -28,11 +29,11 @@ public class SplitImpressionsHook<T> extends Hook<T> {
     }
 
     @Override
-    public void after(HookContext<T> ctx, FlagEvaluationDetails<T> details, ImmutableMap<String, Object> hints) {
+    public void after(HookContext<T> ctx, FlagEvaluationDetails<T> details, Map<String, Object> hints) {
         // FIXME: once eval context is defined we need to use it to get the split key
         String splitKey = ctx.getCtx().toString();
         String treatmentString = String.valueOf(details.getValue());
-        String source = ctx.getProvider().getName();
+        String source = ctx.getProviderMetadata().getName();
         sendImpression(splitKey, ctx.getFlagKey(), treatmentString, source);
     }
 

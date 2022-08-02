@@ -52,6 +52,11 @@
       <version>3.4.6</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>dev.openfeature</groupId>
+      <artifactId>javasdk</artifactId>
+      <version>0.0.2</version>
+    </dependency>
   </dependencies>
 
   <build>

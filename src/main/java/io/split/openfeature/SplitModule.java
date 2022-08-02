@@ -1,6 +1,7 @@
 package io.split.openfeature;
 
 import dev.openfeature.javasdk.exceptions.GeneralError;
+import io.split.client.SplitClient;
 import io.split.client.SplitClientConfig;
 import io.split.client.SplitFactory;
 import io.split.client.SplitFactoryBuilder;
@@ -16,7 +17,7 @@ public class SplitModule {
 
     private static SplitModule instance = null;
 
-    private io.split.client.SplitClient client;
+    private SplitClient client;
 
     private SplitModule() {}
 
