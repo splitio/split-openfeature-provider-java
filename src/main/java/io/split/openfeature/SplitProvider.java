@@ -23,7 +23,6 @@ public class SplitProvider implements FeatureProvider {
         client = splitClient;
     }
 
-    // Interesting that we have to define a constructor... would it make more sense for feature provider to be an abstract class with constructor instead of interface?
     public SplitProvider(String apiKey) {
         SplitModule splitModule = SplitModule.getInstance();
         if (splitModule.getClient() == null) {
@@ -34,7 +33,7 @@ public class SplitProvider implements FeatureProvider {
 
     @Override
     public Metadata getMetadata() {
-        return () -> "No-op Provider";
+        return () -> NAME;
     }
 
     @Override
@@ -45,8 +44,8 @@ public class SplitProvider implements FeatureProvider {
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
             } else {
-                // if treatment is "on" we treat that as true or if it is true
-                // if it is false of off we treat it as false
+                // if treatment is "on" or "true" we treat that as true
+                // if it is "off" or "false" we treat it as false
                 // if it is some other value we throw an error (sdk will catch it and throw default treatment)
                 if (Boolean.parseBoolean(evaluated) || evaluated.equals("on")) {
                     value = true;
@@ -139,17 +138,12 @@ public class SplitProvider implements FeatureProvider {
     }
 
     public Map<String, Object> transformContext(EvaluationContext context) {
-        /* according to spec https://github.com/open-feature/spec/blob/main/specification/provider/providers.md#context-transformation
-            we should have this (public) method which translates the context into the format split expects, which is a map of attributes.
-            It is public so the client can transform context once and give it to us on calls to save us from doing it each time. (We need to modify some method signatures to allow this then?)
-         */
-        // TODO: fill in once the EvaluationContext is defined
+        // TODO: create attributes map from eval context
         return Map.of();
     }
 
     private String evaluateTreatment(String key, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
-        // TODO: get id from evaluation context once that class is defined
-        String id = "someId";
+        String id = evaluationContext.getTargetingKey();
         Map<String, Object> attributes = transformContext(evaluationContext);
         return client.getTreatment(id, key, attributes);
     }
