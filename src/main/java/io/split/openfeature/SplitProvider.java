@@ -40,7 +40,7 @@ public class SplitProvider implements FeatureProvider {
     @Override
     public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
+            String evaluated = evaluateTreatment(key, evaluationContext);
             Boolean value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -66,7 +66,7 @@ public class SplitProvider implements FeatureProvider {
     @Override
     public ProviderEvaluation<String> getStringEvaluation(String key, String defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
+            String evaluated = evaluateTreatment(key, evaluationContext);
             String value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -82,7 +82,7 @@ public class SplitProvider implements FeatureProvider {
     @Override
     public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
+            String evaluated = evaluateTreatment(key, evaluationContext);
             Integer value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -98,7 +98,7 @@ public class SplitProvider implements FeatureProvider {
     @Override
     public ProviderEvaluation<Double> getDoubleEvaluation(String key, Double defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
+            String evaluated = evaluateTreatment(key, evaluationContext);
             Double value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -114,7 +114,7 @@ public class SplitProvider implements FeatureProvider {
     @Override
     public <T> ProviderEvaluation<T> getObjectEvaluation(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
         try {
-            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
+            String evaluated = evaluateTreatment(key, evaluationContext);
             T value;
             if (noTreatment(evaluated)) {
                 value = defaultTreatment;
@@ -136,7 +136,7 @@ public class SplitProvider implements FeatureProvider {
         return attributes;
     }
 
-    private String evaluateTreatment(String key, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+    private String evaluateTreatment(String key, EvaluationContext evaluationContext) {
         String id = evaluationContext.getTargetingKey();
         Map<String, Object> attributes = transformContext(evaluationContext);
         return client.getTreatment(id, key, attributes);
