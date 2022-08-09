@@ -11,6 +11,7 @@ import dev.openfeature.javasdk.exceptions.GeneralError;
 import io.split.client.SplitClient;
 import io.split.openfeature.utils.Serialization;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class SplitProvider implements FeatureProvider {
@@ -55,13 +56,7 @@ public class SplitProvider implements FeatureProvider {
                     throw new GeneralError("Error: Can not cast treatment to a boolean");
                 }
             }
-            Reason reason = Reason.SPLIT;
-            ProviderEvaluation.ProviderEvaluationBuilder<Boolean> builder = ProviderEvaluation.builder();
-            return builder
-                    .value(value)
-                    .reason(reason)
-                    .variant(evaluated)
-                    .build();
+            return constructProviderEvaluation(value, evaluated);
         } catch (Exception e) {
             throw new GeneralError("Error getting boolean evaluation", e);
         }
@@ -78,14 +73,7 @@ public class SplitProvider implements FeatureProvider {
             } else {
                 value = evaluated;
             }
-
-            Reason reason = Reason.SPLIT;
-            ProviderEvaluation.ProviderEvaluationBuilder<String> builder = ProviderEvaluation.builder();
-            return builder
-                    .value(value)
-                    .reason(reason)
-                    .variant(evaluated)
-                    .build();
+            return constructProviderEvaluation(value, evaluated);
         } catch (Exception e) {
             throw new GeneralError("Error getting String evaluation", e);
         }
@@ -101,16 +89,25 @@ public class SplitProvider implements FeatureProvider {
             } else {
                 value = Integer.valueOf(evaluated);
             }
-
-            Reason reason = Reason.SPLIT;
-            ProviderEvaluation.ProviderEvaluationBuilder<Integer> builder = ProviderEvaluation.builder();
-            return builder
-                    .value(value)
-                    .reason(reason)
-                    .variant(evaluated)
-                    .build();
+            return constructProviderEvaluation(value, evaluated);
         } catch (Exception e) {
             throw new GeneralError("Error getting Integer evaluation", e);
+        }
+    }
+
+    @Override
+    public ProviderEvaluation<Double> getDoubleEvaluation(String key, Double defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+        try {
+            String evaluated = evaluateTreatment(key, evaluationContext, flagEvaluationOptions);
+            Double value;
+            if (noTreatment(evaluated)) {
+                value = defaultTreatment;
+            } else {
+                value = Double.valueOf(evaluated);
+            }
+            return constructProviderEvaluation(value, evaluated);
+        } catch (Exception e) {
+            throw new GeneralError("Error getting Double evaluation", e);
         }
     }
 
@@ -124,22 +121,19 @@ public class SplitProvider implements FeatureProvider {
             } else {
                 value = Serialization.deserialize(evaluated, new TypeReference<T>() {});
             }
-
-            Reason reason = Reason.SPLIT;
-            ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
-            return builder
-                    .value(value)
-                    .reason(reason)
-                    .variant(evaluated)
-                    .build();
+            return constructProviderEvaluation(value, evaluated);
         } catch (Exception e) {
             throw new GeneralError("Error getting Object evaluation", e);
         }
     }
 
     public Map<String, Object> transformContext(EvaluationContext context) {
-        // TODO: create attributes map from eval context
-        return Map.of();
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.putAll(context.getStringAttributes());
+        attributes.putAll(context.getIntegerAttributes());
+        attributes.putAll(context.getBooleanAttributes());
+        attributes.putAll(context.getStructureAttributes());
+        return attributes;
     }
 
     private String evaluateTreatment(String key, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
@@ -150,5 +144,15 @@ public class SplitProvider implements FeatureProvider {
 
     private boolean noTreatment(String treatment) {
         return treatment == null || treatment.isEmpty() || treatment.equals("control");
+    }
+
+    private <T> ProviderEvaluation<T> constructProviderEvaluation(T value, String  evaluated) {
+        Reason reason = Reason.SPLIT;
+        ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
+        return builder
+          .value(value)
+          .reason(reason)
+          .variant(evaluated)
+          .build();
     }
 }
