@@ -42,10 +42,20 @@ public class ClientTest {
 
   @Test
   public void useDefaultTest() {
-    Boolean result = client.getBooleanValue("random-non-existent-feature", false);
+    String flagName = "random-non-existent-feature";
+    Boolean result = client.getBooleanValue(flagName, false);
     assertFalse(result);
-    result = client.getBooleanValue("random-non-existent-feature", true);
+    result = client.getBooleanValue(flagName, true);
     assertTrue(result);
+
+    String resultString = client.getStringValue(flagName, "blah");
+    assertEquals("blah", resultString);
+
+    Integer resultInt = client.getIntegerValue(flagName, 100);
+    assertEquals(100, resultInt);
+
+    Map<String, String> resultMap = client.getObjectValue(flagName, Map.of("default", "value"));
+    assertEquals(Map.of("default", "value"), resultMap);
   }
 
   @Test
@@ -57,7 +67,7 @@ public class ClientTest {
 
   @Test
   public void getBooleanSplitWithKeyTest() {
-    // the key "key" was set in the before each. Therefore the treatment of true should be received
+    // the key "key" was set in the before each. Therefore, the treatment of true should be received
     Boolean result = client.getBooleanValue("my_feature", false);
     assertTrue(result);
 
