@@ -7,6 +7,6 @@
 - some_other_feature:
     treatment: "off"
 - int_feature:
-      treatment: "32"
+    treatment: "32"
 - obj_feature:
-      treatment: "{\"key\": \"value\"}"
+    treatment: "{\"key\": \"value\"}"

@@ -15,22 +15,22 @@ import java.util.List;
 
 public class ImpressionListenerImpl {
 
-    private ImpressionsManager impressionsManager;
+  private ImpressionsManager impressionsManager;
 
-    public ImpressionListenerImpl(ImpressionListenerProperties properties) {
-        try {
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            ImpressionsStorage storage = new InMemoryImpressionsStorage(30000);
-            impressionsManager = ImpressionsManagerImpl.instance(properties, httpClient, storage, storage);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
+  public ImpressionListenerImpl(ImpressionListenerProperties properties) {
+    try {
+      CloseableHttpClient httpClient = HttpClients.createDefault();
+      ImpressionsStorage storage = new InMemoryImpressionsStorage(30000);
+      impressionsManager = ImpressionsManagerImpl.instance(properties, httpClient, storage, storage);
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
     }
+  }
 
-    public void handleImpression(String key, String feature, String treatment, String source) {
-        source = source.toUpperCase();
-        String rule = "default rule"; // For now, always assume the default rule
-        Impression i = new Impression(key, null, feature, treatment, System.currentTimeMillis(), rule, 0L, null, source);
-        impressionsManager.track(List.of(i));
-    }
+  public void handleImpression(String key, String feature, String treatment, String source) {
+    source = source.toUpperCase();
+    String rule = "default rule"; // For now, always assume the default rule
+    Impression i = new Impression(key, null, feature, treatment, System.currentTimeMillis(), rule, 0L, null, source);
+    impressionsManager.track(List.of(i));
+  }
 }
