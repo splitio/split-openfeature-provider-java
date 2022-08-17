@@ -9,8 +9,21 @@
   <version>1.0-SNAPSHOT</version>
 
   <name>split-openfeature-provider-java</name>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
+  <url>www.split.io</url>
+
+  <developers>
+    <developer>
+      <name>Robert Grassian</name>
+      <email>robert.grassian@split.io</email>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Apache 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
