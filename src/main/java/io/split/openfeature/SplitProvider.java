@@ -126,7 +126,8 @@ public class SplitProvider implements FeatureProvider {
       if (noTreatment(evaluated)) {
         return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
       }
-      T value = Serialization.deserialize(evaluated, new TypeReference<T>() {});
+      T value = Serialization.deserialize(evaluated, new TypeReference<T>() {
+      });
       return constructProviderEvaluation(value, evaluated);
     } catch (OpenFeatureError e) {
       throw e;
