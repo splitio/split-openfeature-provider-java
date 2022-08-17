@@ -1,6 +1,7 @@
 package io.split.openfeature;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import dev.openfeature.javasdk.ErrorCode;
 import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.FeatureProvider;
 import dev.openfeature.javasdk.FlagEvaluationOptions;
@@ -8,6 +9,8 @@ import dev.openfeature.javasdk.Metadata;
 import dev.openfeature.javasdk.ProviderEvaluation;
 import dev.openfeature.javasdk.Reason;
 import dev.openfeature.javasdk.exceptions.GeneralError;
+import dev.openfeature.javasdk.exceptions.OpenFeatureError;
+import dev.openfeature.javasdk.exceptions.ParseError;
 import io.split.client.SplitClient;
 import io.split.openfeature.utils.Serialization;
 
@@ -41,22 +44,23 @@ public class SplitProvider implements FeatureProvider {
   public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
-      Boolean value;
       if (noTreatment(evaluated)) {
-        value = defaultTreatment;
+        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
+      }
+      // if treatment is "on" or "true" we treat that as true
+      // if it is "off" or "false" we treat it as false
+      // if it is some other value we throw an error (sdk will catch it and throw default treatment)
+      boolean value;
+      if (Boolean.parseBoolean(evaluated) || evaluated.equals("on")) {
+        value = true;
+      } else if (evaluated.equalsIgnoreCase("false") || evaluated.equals("off")) {
+        value = false;
       } else {
-        // if treatment is "on" or "true" we treat that as true
-        // if it is "off" or "false" we treat it as false
-        // if it is some other value we throw an error (sdk will catch it and throw default treatment)
-        if (Boolean.parseBoolean(evaluated) || evaluated.equals("on")) {
-          value = true;
-        } else if (evaluated.equalsIgnoreCase("false") || evaluated.equals("off")) {
-          value = false;
-        } else {
-          throw new GeneralError("Error: Can not cast treatment to a boolean");
-        }
+        throw new ParseError(ErrorCode.PARSE_ERROR.name());
       }
       return constructProviderEvaluation(value, evaluated);
+    } catch (OpenFeatureError e) {
+      throw e;
     } catch (Exception e) {
       throw new GeneralError("Error getting boolean evaluation", e);
     }
@@ -69,11 +73,11 @@ public class SplitProvider implements FeatureProvider {
       String evaluated = evaluateTreatment(key, evaluationContext);
       String value;
       if (noTreatment(evaluated)) {
-        value = defaultTreatment;
-      } else {
-        value = evaluated;
+        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
       }
-      return constructProviderEvaluation(value, evaluated);
+      return constructProviderEvaluation(evaluated, evaluated);
+    } catch (OpenFeatureError e) {
+      throw e;
     } catch (Exception e) {
       throw new GeneralError("Error getting String evaluation", e);
     }
@@ -83,13 +87,15 @@ public class SplitProvider implements FeatureProvider {
   public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
-      Integer value;
       if (noTreatment(evaluated)) {
-        value = defaultTreatment;
-      } else {
-        value = Integer.valueOf(evaluated);
+        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
       }
+      Integer value = Integer.valueOf(evaluated);
       return constructProviderEvaluation(value, evaluated);
+    } catch (OpenFeatureError e) {
+      throw e;
+    } catch (NumberFormatException e) {
+      throw new ParseError(ErrorCode.PARSE_ERROR.name());
     } catch (Exception e) {
       throw new GeneralError("Error getting Integer evaluation", e);
     }
@@ -99,13 +105,15 @@ public class SplitProvider implements FeatureProvider {
   public ProviderEvaluation<Double> getDoubleEvaluation(String key, Double defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
-      Double value;
       if (noTreatment(evaluated)) {
-        value = defaultTreatment;
-      } else {
-        value = Double.valueOf(evaluated);
+        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
       }
+      Double value = Double.valueOf(evaluated);
       return constructProviderEvaluation(value, evaluated);
+    } catch (OpenFeatureError e) {
+      throw e;
+    } catch (NumberFormatException e) {
+      throw new ParseError(ErrorCode.PARSE_ERROR.name());
     } catch (Exception e) {
       throw new GeneralError("Error getting Double evaluation", e);
     }
@@ -115,14 +123,13 @@ public class SplitProvider implements FeatureProvider {
   public <T> ProviderEvaluation<T> getObjectEvaluation(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
-      T value;
       if (noTreatment(evaluated)) {
-        value = defaultTreatment;
-      } else {
-        value = Serialization.deserialize(evaluated, new TypeReference<T>() {
-        });
+        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
       }
+      T value = Serialization.deserialize(evaluated, new TypeReference<T>() {});
       return constructProviderEvaluation(value, evaluated);
+    } catch (OpenFeatureError e) {
+      throw e;
     } catch (Exception e) {
       throw new GeneralError("Error getting Object evaluation", e);
     }
@@ -139,6 +146,10 @@ public class SplitProvider implements FeatureProvider {
 
   private String evaluateTreatment(String key, EvaluationContext evaluationContext) {
     String id = evaluationContext.getTargetingKey();
+    if (id == null || id.isEmpty()) {
+      // targeting key is always required
+      throw new GeneralError("TARGETING_KEY_MISSING");
+    }
     Map<String, Object> attributes = transformContext(evaluationContext);
     return client.getTreatment(id, key, attributes);
   }
@@ -147,13 +158,17 @@ public class SplitProvider implements FeatureProvider {
     return treatment == null || treatment.isEmpty() || treatment.equals("control");
   }
 
-  private <T> ProviderEvaluation<T> constructProviderEvaluation(T value, String evaluated) {
-    Reason reason = Reason.SPLIT;
+  private <T> ProviderEvaluation<T> constructProviderEvaluation(T value, String variant) {
+    return constructProviderEvaluation(value, variant, Reason.TARGETING_MATCH, null);
+  }
+
+  private <T> ProviderEvaluation<T> constructProviderEvaluation(T value, String variant, Reason reason, String errorCode) {
     ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
     return builder
       .value(value)
       .reason(reason)
-      .variant(evaluated)
+      .variant(variant)
+      .errorCode(errorCode)
       .build();
   }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.ProviderEvaluation;
 import dev.openfeature.javasdk.exceptions.GeneralError;
+import dev.openfeature.javasdk.exceptions.OpenFeatureError;
 import io.split.client.SplitClient;
 import io.split.openfeature.utils.Serialization;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,8 +153,8 @@ public class SplitProviderTest {
     try {
       splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
       fail("Should have thrown an exception casting string to integer");
-    } catch (GeneralError e) {
-      assertEquals("Error getting boolean evaluation", e.getMessage());
+    } catch (OpenFeatureError e) {
+      assertEquals("PARSE_ERROR", e.getMessage());
     } catch (Exception e) {
       fail("Unexpected exception occurred", e);
     }
@@ -271,8 +272,8 @@ public class SplitProviderTest {
     try {
       splitProvider.getIntegerEvaluation(flagName, 10, evaluationContext, null);
       fail("Should have thrown an exception casting string to integer");
-    } catch (GeneralError e) {
-      assertEquals("Error getting Integer evaluation", e.getMessage());
+    } catch (OpenFeatureError e) {
+      assertEquals("PARSE_ERROR", e.getMessage());
     } catch (Exception e) {
       fail("Unexpected exception occurred", e);
     }
