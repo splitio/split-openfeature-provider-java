@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class SplitProvider implements FeatureProvider {
 
-  private static final String NAME = "split";
+  private static final String NAME = "Split";
 
   private final SplitClient client;
 

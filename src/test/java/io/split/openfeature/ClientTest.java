@@ -105,7 +105,7 @@ public class ClientTest {
   @Test
   public void getMetadataNameTest() {
     assertEquals("Split Client", client.getMetadata().getName());
-    assertEquals("split", openFeatureAPI.getProviderMetadata().getName());
+    assertEquals("Split", openFeatureAPI.getProviderMetadata().getName());
   }
 
   @Test
