@@ -1,2 +1,2 @@
 0.0.1
-- First release
+- First release. Up to date with spec v0.3.1

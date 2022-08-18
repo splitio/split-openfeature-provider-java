@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+/**
+ * This class uses the split.yaml file in src/test/resources for the flags and their treatments
+ */
 public class ClientTest {
 
   OpenFeatureAPI openFeatureAPI;
@@ -47,6 +50,7 @@ public class ClientTest {
 
   @Test
   public void useDefaultTest() {
+    // flags that do not exist should return the default value
     String flagName = "random-non-existent-feature";
     Boolean result = client.getBooleanValue(flagName, false);
     assertFalse(result);
@@ -64,6 +68,26 @@ public class ClientTest {
   }
 
   @Test
+  public void missingTargetingKeyTest() {
+    // Split requires a targeting key and should return the default treatment and throw an error if not provided
+    client.setEvaluationContext(new EvaluationContext());
+    FlagEvaluationDetails<Boolean> details = client.getBooleanDetails("non-existent-feature", false);
+    assertFalse(details.getValue());
+    assertEquals("TARGETING_KEY_MISSING", details.getErrorCode());
+  }
+
+  @Test
+  public void getControlVariantNonExistentSplit() {
+    // split returns a treatment = "control" if the flag is not found.
+    // This should be interpreted by the Split provider to mean not found and therefore use the default value.
+    // This control treatment should still be recorded as the variant.
+    FlagEvaluationDetails<Boolean> details = client.getBooleanDetails("non-existent-feature", false);
+    assertFalse(details.getValue());
+    assertEquals("control", details.getVariant());
+    assertEquals(ErrorCode.FLAG_NOT_FOUND.name(), details.getErrorCode());
+  }
+
+  @Test
   public void getBooleanSplitTest() {
     // This should be false as defined as "off" in the split.yaml
     Boolean result = client.getBooleanValue("some_other_feature", true);
@@ -72,7 +96,7 @@ public class ClientTest {
 
   @Test
   public void getBooleanSplitWithKeyTest() {
-    // the key "key" was set in the before each. Therefore, the treatment of true should be received
+    // the key "key" was set in the before each. Therefore, the treatment of true should be received as defined in split.yaml
     Boolean result = client.getBooleanValue("my_feature", false);
     assertTrue(result);
 
@@ -152,8 +176,6 @@ public class ClientTest {
     assertNull(details.getErrorCode());
   }
 
-  // TODO: get details of rest of types
-
   @Test
   public void getBooleanFailTest() {
     // attempt to fetch an object treatment as a boolean. Should result in the default
@@ -204,25 +226,5 @@ public class ClientTest {
     } catch (Exception e) {
       fail("Unexpected exception occurred: ", e);
     }
-  }
-
-  @Test
-  public void getControlVariantNonExistentSplit() {
-    // split returns a treatment = "control" if the flag is not found.
-    // This should be interpreted by the Split provider to mean not found and therefore use the default value.
-    // This control treatment should still be recorded as the variant.
-    FlagEvaluationDetails<Boolean> details = client.getBooleanDetails("non-existent-feature", false);
-    assertFalse(details.getValue());
-    assertEquals("control", details.getVariant());
-    assertEquals(ErrorCode.FLAG_NOT_FOUND.name(), details.getErrorCode());
-  }
-
-  @Test
-  public void missingTargetingKeyTest() {
-    // Split requires a targeting key and should return the default treatment and throw an error if not provided
-    client.setEvaluationContext(new EvaluationContext());
-    FlagEvaluationDetails<Boolean> details = client.getBooleanDetails("non-existent-feature", false);
-    assertFalse(details.getValue());
-    assertEquals("TARGETING_KEY_MISSING", details.getErrorCode());
   }
 }

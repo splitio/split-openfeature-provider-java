@@ -71,7 +71,6 @@ public class SplitProvider implements FeatureProvider {
   public ProviderEvaluation<String> getStringEvaluation(String key, String defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
-      String value;
       if (noTreatment(evaluated)) {
         return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
       }
