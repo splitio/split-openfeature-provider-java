@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -392,6 +395,48 @@ public class SplitProviderTest {
     String flagName = "flagName";
     Structure treatment = new Structure(Map.of("abc", new Value("def")));
     String treatmentAsString = "{\"abc\":\"def\"}";
+
+    when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(treatmentAsString);
+
+    ProviderEvaluation<Structure> response =
+      splitProvider.getObjectEvaluation(flagName, new Structure(Map.of("foo", new Value("bar"))), evaluationContext);
+    assertEquals(treatment, response.getValue());
+  }
+
+  @Test
+  public void evalStructureComplexTest() {
+    // an object treatment should eval to that object
+    SplitProvider splitProvider = new SplitProvider(mockSplitClient);
+
+    String flagName = "flagName";
+    ZonedDateTime zonedDateTime = ZonedDateTime.of(2020, 1, 10, 0, 0, 0, 0, ZoneId.of("UTC"));
+    Structure treatment = new Structure(Map.of(
+      "string", new Value("blah"),
+      "int", new Value(10),
+      "double", new Value(100D),
+      "bool", new Value(true),
+      "struct", new Value(
+        new Structure(Map.of(
+          "foo", new Value("bar"),
+          "baz", new Value(10),
+          "innerMap", new Value(
+            new Structure(Map.of(
+              "aa", new Value("bb"))))))),
+      "list", new Value(
+        List.of(
+          new Value(1),
+          new Value(true),
+          new Value(
+            new Structure(Map.of(
+              "cc", new Value("dd")
+            ))),
+          new Value(
+            new Structure(Map.of(
+              "ee", new Value(1)
+            ))))),
+      "dateTime", new Value(zonedDateTime)
+    ));
+    String treatmentAsString = "{\"string\":\"blah\",\"int\":10,\"double\":100.0,\"bool\":true, \"struct\":{\"foo\":\"bar\",\"baz\":10,\"innerMap\":{\"aa\":\"bb\"}},\"list\":[1,true,{\"cc\":\"dd\"},{\"ee\":1}],\"dateTime\":\"2020-01-10T00:00Z[UTC]\"}";
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(treatmentAsString);
 

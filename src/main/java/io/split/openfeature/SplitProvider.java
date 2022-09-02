@@ -14,7 +14,8 @@ import dev.openfeature.javasdk.exceptions.ParseError;
 import io.split.client.SplitClient;
 import io.split.openfeature.utils.Serialization;
 
-import java.util.HashMap;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -127,11 +128,8 @@ public class SplitProvider implements FeatureProvider {
       if (noTreatment(evaluated)) {
         return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
       }
-      Structure structure = new Structure();
       Map<String, Object> rawMap = Serialization.stringToMap(evaluated);
-      for (Map.Entry<String, Object> rawEntry : rawMap.entrySet()) {
-        structure.add(rawEntry.getKey(),(String) rawEntry.getValue());
-      }
+      Structure structure = mapToStructure(rawMap);
       return constructProviderEvaluation(structure, evaluated);
     } catch (OpenFeatureError e) {
       throw e;
@@ -173,17 +171,12 @@ public class SplitProvider implements FeatureProvider {
   }
 
   private Map<String, Object> getMapFromStructMap(Map<String, Value> structMap) {
-    Map<String, Object> toReturn = new HashMap<>();
-    for (Map.Entry<String, Value> entry : structMap.entrySet()) {
-      String key = entry.getKey();
-      Value value = entry.getValue();
-      toReturn.put(key, getInnerValue(value));
-    }
-    return toReturn;
+    return structMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getInnerValue(e.getValue())));
   }
 
-  private Map<String, Object> getMapFromStructure(Structure structure) {
-    return getMapFromStructMap(structure.asMap());
+  private Structure mapToStructure(Map<String, Object> map) {
+    return new Structure(
+      map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> objectToValue(e.getValue()))));
   }
 
   private Object getInnerValue(Value value) {
@@ -205,12 +198,12 @@ public class SplitProvider implements FeatureProvider {
     }
     object = value.asZonedDateTime();
     if (object != null) {
-      return object.toString();
+      return object;
     }
     object = value.asStructure();
     if (object != null) {
       // must return a map
-      return getMapFromStructure((Structure) object);
+      return getMapFromStructMap(((Structure) object).asMap());
     }
     object = value.asList();
     if (object != null) {
@@ -218,6 +211,36 @@ public class SplitProvider implements FeatureProvider {
       List<Value> values = (List<Value>) object;
       return values.stream().map(this::getInnerValue).collect(Collectors.toList());
     }
-    return null;
+    throw new ClassCastException("Could not get inner value from Value object.");
+  }
+
+  private Value objectToValue(Object object) {
+    if (object instanceof Value) {
+      return (Value) object;
+    } else if (object instanceof String) {
+      // try to parse to zoned date time, otherwise use as string
+      try {
+        return new Value(ZonedDateTime.parse((String) object));
+      } catch (DateTimeParseException e) {
+        return new Value((String) object);
+      }
+    } else if (object instanceof Boolean) {
+      return new Value((Boolean) object);
+    } else if (object instanceof Integer) {
+      return new Value((Integer) object);
+    } else if (object instanceof Double) {
+      return new Value((Double) object);
+    } else if (object instanceof Structure) {
+      return new Value((Structure) object);
+    } else if (object instanceof List) {
+      // need to translate each elem in list to a value
+      return new Value(((List<Object>) object).stream().map(this::objectToValue).collect(Collectors.toList()));
+    } else if (object instanceof ZonedDateTime) {
+      return new Value((ZonedDateTime) object);
+    } else if (object instanceof Map) {
+      return new Value(mapToStructure((Map<String, Object>) object));
+    } else {
+      throw new ClassCastException("Could not cast Object to Value");
+    }
   }
 }
