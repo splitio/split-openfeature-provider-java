@@ -6,6 +6,8 @@ import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.FlagEvaluationDetails;
 import dev.openfeature.javasdk.OpenFeatureAPI;
 import dev.openfeature.javasdk.Reason;
+import dev.openfeature.javasdk.Structure;
+import dev.openfeature.javasdk.Value;
 import io.split.client.SplitClient;
 import io.split.client.SplitClientConfig;
 import io.split.client.SplitFactoryBuilder;
@@ -14,20 +16,17 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This class uses the split.yaml file in src/test/resources for the flags and their treatments
  */
 public class ClientTest {
-
   OpenFeatureAPI openFeatureAPI;
   Client client;
 
@@ -52,19 +51,23 @@ public class ClientTest {
   public void useDefaultTest() {
     // flags that do not exist should return the default value
     String flagName = "random-non-existent-feature";
+
     Boolean result = client.getBooleanValue(flagName, false);
     assertFalse(result);
     result = client.getBooleanValue(flagName, true);
     assertTrue(result);
 
-    String resultString = client.getStringValue(flagName, "blah");
-    assertEquals("blah", resultString);
+    String defaultString = "blah";
+    String resultString = client.getStringValue(flagName, defaultString);
+    assertEquals(defaultString, resultString);
 
-    Integer resultInt = client.getIntegerValue(flagName, 100);
-    assertEquals(100, resultInt);
+    int defaultInt = 100;
+    Integer resultInt = client.getIntegerValue(flagName, defaultInt);
+    assertEquals(defaultInt, resultInt);
 
-    Map<String, String> resultMap = client.getObjectValue(flagName, Map.of("default", "value"));
-    assertEquals(Map.of("default", "value"), resultMap);
+    Structure defaultStructure = new Structure(Map.of("foo", new Value("bar")));
+    Structure resultStructure = client.getObjectValue(flagName, defaultStructure);
+    assertEquals(defaultStructure, resultStructure);
   }
 
   @Test
@@ -122,8 +125,14 @@ public class ClientTest {
 
   @Test
   public void getObjectSplitTest() {
-    Map<String, String> result = client.getObjectValue("obj_feature", new HashMap<>());
-    assertEquals(Map.of("key", "value"), result);
+    Structure result = client.getObjectValue("obj_feature", new Structure());
+    assertEquals(new Structure(Map.of("key", new Value("value"))), result);
+  }
+
+  @Test
+  public void getDoubleSplitTest() {
+    Double result = client.getDoubleValue("int_feature", 0D);
+    assertEquals(32D, result);
   }
 
   @Test
@@ -167,12 +176,23 @@ public class ClientTest {
 
   @Test
   public void getObjectDetailsTest() {
-    FlagEvaluationDetails<Map<String, String>> details = client.getObjectDetails("obj_feature", new HashMap<>());
+    FlagEvaluationDetails<Structure> details = client.getObjectDetails("obj_feature", new Structure());
     assertEquals("obj_feature", details.getFlagKey());
     assertEquals(Reason.TARGETING_MATCH, details.getReason());
-    assertEquals(Map.of("key", "value"), details.getValue());
+    assertEquals(new Structure(Map.of("key", new Value("value"))), details.getValue());
     // the flag's treatment is stored as a string, and the variant is that raw string
     assertEquals("{\"key\": \"value\"}", details.getVariant());
+    assertNull(details.getErrorCode());
+  }
+
+  @Test
+  public void getDoubleDetailsTest() {
+    FlagEvaluationDetails<Double> details = client.getDoubleDetails("int_feature", 0D);
+    assertEquals("int_feature", details.getFlagKey());
+    assertEquals(Reason.TARGETING_MATCH, details.getReason());
+    assertEquals(32D, details.getValue());
+    // the flag has a treatment of "32", this is resolved to a double but the variant is still "32"
+    assertEquals("32", details.getVariant());
     assertNull(details.getErrorCode());
   }
 
@@ -217,14 +237,15 @@ public class ClientTest {
 
   @Test
   public void getObjectFailTest() {
-    // attempt to fetch a Map Object treatment as an Integer object. Due to Java generics there is no way to know of the
-    // type mismatch until assignment here
-    try {
-      client.getObjectValue("obj_feature", 10);
-    } catch (ClassCastException e) {
+    // attempt to fetch an int as an object. Should result in the default
+    Structure defaultStruct = new Structure(Map.of("foo", new Value("bar")));
+    Structure value = client.getObjectValue("int_feature", defaultStruct);
+    assertEquals(defaultStruct, value);
 
-    } catch (Exception e) {
-      fail("Unexpected exception occurred: ", e);
-    }
+    FlagEvaluationDetails<Structure> details = client.getObjectDetails("int_feature", defaultStruct);
+    assertEquals(defaultStruct, details.getValue());
+    assertEquals(ErrorCode.PARSE_ERROR.name(), details.getErrorCode());
+    assertEquals(Reason.ERROR, details.getReason());
+    assertNull(details.getVariant());
   }
 }

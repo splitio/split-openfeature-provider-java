@@ -1,13 +1,13 @@
 package io.split.openfeature;
 
-
-import com.fasterxml.jackson.core.JsonProcessingException;
+import dev.openfeature.javasdk.ErrorCode;
 import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.ProviderEvaluation;
+import dev.openfeature.javasdk.Structure;
+import dev.openfeature.javasdk.Value;
 import dev.openfeature.javasdk.exceptions.GeneralError;
 import dev.openfeature.javasdk.exceptions.OpenFeatureError;
 import io.split.client.SplitClient;
-import io.split.openfeature.utils.Serialization;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -64,18 +64,18 @@ public class SplitProviderTest {
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(null);
 
-    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
+    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
     assertFalse(response.getValue());
 
-    response = splitProvider.getBooleanEvaluation(flagName, true, evaluationContext, null);
+    response = splitProvider.getBooleanEvaluation(flagName, true, evaluationContext);
     assertTrue(response.getValue());
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("");
 
-    response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
+    response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
     assertFalse(response.getValue());
 
-    response = splitProvider.getBooleanEvaluation(flagName, true, evaluationContext, null);
+    response = splitProvider.getBooleanEvaluation(flagName, true, evaluationContext);
     assertTrue(response.getValue());
   }
 
@@ -88,10 +88,10 @@ public class SplitProviderTest {
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("control");
 
-    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
+    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
     assertFalse(response.getValue());
 
-    response = splitProvider.getBooleanEvaluation(flagName, true, evaluationContext, null);
+    response = splitProvider.getBooleanEvaluation(flagName, true, evaluationContext);
     assertTrue(response.getValue());
   }
 
@@ -102,7 +102,7 @@ public class SplitProviderTest {
 
     String flagName = "flagName";
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("true");
-    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
+    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
 
     assertTrue(response.getValue());
   }
@@ -114,7 +114,7 @@ public class SplitProviderTest {
 
     String flagName = "flagName";
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("on");
-    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
+    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
 
     assertTrue(response.getValue());
   }
@@ -126,7 +126,7 @@ public class SplitProviderTest {
 
     String flagName = "flagName";
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("false");
-    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
+    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
 
     assertFalse(response.getValue());
   }
@@ -138,23 +138,23 @@ public class SplitProviderTest {
 
     String flagName = "flagName";
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("off");
-    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
+    ProviderEvaluation<Boolean> response = splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
 
     assertFalse(response.getValue());
   }
 
   @Test
-  public void evalBooleanRandomStringTest() {
+  public void evalBooleanErrorTest() {
     // any other random string other than on,off,true,false,control should throw an error
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
     String flagName = "flagName";
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("a random string");
     try {
-      splitProvider.getBooleanEvaluation(flagName, false, evaluationContext, null);
+      splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
       fail("Should have thrown an exception casting string to integer");
     } catch (OpenFeatureError e) {
-      assertEquals("PARSE_ERROR", e.getMessage());
+      assertEquals(ErrorCode.PARSE_ERROR.name(), e.getMessage());
     } catch (Exception e) {
       fail("Unexpected exception occurred", e);
     }
@@ -172,12 +172,12 @@ public class SplitProviderTest {
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(null);
 
-    ProviderEvaluation<String> response = splitProvider.getStringEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    ProviderEvaluation<String> response = splitProvider.getStringEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("");
 
-    response = splitProvider.getStringEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    response = splitProvider.getStringEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
   }
 
@@ -191,7 +191,7 @@ public class SplitProviderTest {
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("control");
 
-    ProviderEvaluation<String> response = splitProvider.getStringEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    ProviderEvaluation<String> response = splitProvider.getStringEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
   }
 
@@ -205,14 +205,14 @@ public class SplitProviderTest {
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(treatment);
 
-    ProviderEvaluation<String> response = splitProvider.getStringEvaluation(flagName, "defaultTreatment", evaluationContext, null);
+    ProviderEvaluation<String> response = splitProvider.getStringEvaluation(flagName, "defaultTreatment", evaluationContext);
     assertEquals(treatment, response.getValue());
   }
 
-  // *** Number eval tests ***
+  // *** Int eval tests ***
 
   @Test
-  public void evalNumberNullEmptyTest() {
+  public void evalIntNullEmptyTest() {
     // if a treatment is null empty it should return the default treatment
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
@@ -221,17 +221,17 @@ public class SplitProviderTest {
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(null);
 
-    ProviderEvaluation<Integer> response = splitProvider.getIntegerEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    ProviderEvaluation<Integer> response = splitProvider.getIntegerEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("");
 
-    response = splitProvider.getIntegerEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    response = splitProvider.getIntegerEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
   }
 
   @Test
-  public void evalNumberControlTest() {
+  public void evalIntControlTest() {
     // "control" treatment should eval to default treatment
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
@@ -240,12 +240,12 @@ public class SplitProviderTest {
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("control");
 
-    ProviderEvaluation<Integer> response = splitProvider.getIntegerEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    ProviderEvaluation<Integer> response = splitProvider.getIntegerEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
   }
 
   @Test
-  public void evalNumberRegularTest() {
+  public void evalIntRegularTest() {
     // a parsable integer treatment should eval to that integer
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
@@ -255,12 +255,12 @@ public class SplitProviderTest {
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(numString);
 
-    ProviderEvaluation<Integer> response = splitProvider.getIntegerEvaluation(flagName, 10, evaluationContext, null);
+    ProviderEvaluation<Integer> response = splitProvider.getIntegerEvaluation(flagName, 10, evaluationContext);
     assertEquals(numInt, response.getValue());
   }
 
   @Test
-  public void evalNumberErrorTest() {
+  public void evalIntErrorTest() {
     // an un-parsable integer treatment should throw an error
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
@@ -270,10 +270,80 @@ public class SplitProviderTest {
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(numString);
 
     try {
-      splitProvider.getIntegerEvaluation(flagName, 10, evaluationContext, null);
+      splitProvider.getIntegerEvaluation(flagName, 10, evaluationContext);
       fail("Should have thrown an exception casting string to integer");
     } catch (OpenFeatureError e) {
-      assertEquals("PARSE_ERROR", e.getMessage());
+      assertEquals(ErrorCode.PARSE_ERROR.name(), e.getMessage());
+    } catch (Exception e) {
+      fail("Unexpected exception occurred", e);
+    }
+  }
+
+  // *** Double eval tests ***
+
+  @Test
+  public void evalDoubleNullEmptyTest() {
+    // if a treatment is null empty it should return the default treatment
+    SplitProvider splitProvider = new SplitProvider(mockSplitClient);
+
+    String flagName = "flagName";
+    double defaultTreatment = 10;
+
+    when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(null);
+
+    ProviderEvaluation<Double> response = splitProvider.getDoubleEvaluation(flagName, defaultTreatment, evaluationContext);
+    assertEquals(defaultTreatment, response.getValue());
+
+    when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("");
+
+    response = splitProvider.getDoubleEvaluation(flagName, defaultTreatment, evaluationContext);
+    assertEquals(defaultTreatment, response.getValue());
+  }
+
+  @Test
+  public void evalDoubleControlTest() {
+    // "control" treatment should eval to default treatment
+    SplitProvider splitProvider = new SplitProvider(mockSplitClient);
+
+    String flagName = "flagName";
+    double defaultTreatment = 10;
+
+    when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("control");
+
+    ProviderEvaluation<Double> response = splitProvider.getDoubleEvaluation(flagName, defaultTreatment, evaluationContext);
+    assertEquals(defaultTreatment, response.getValue());
+  }
+
+  @Test
+  public void evalDoubleRegularTest() {
+    // a parsable integer treatment should eval to that integer
+    SplitProvider splitProvider = new SplitProvider(mockSplitClient);
+
+    String flagName = "flagName";
+    String numString = "50";
+    double num = 50;
+
+    when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(numString);
+
+    ProviderEvaluation<Double> response = splitProvider.getDoubleEvaluation(flagName, 10D, evaluationContext);
+    assertEquals(num, response.getValue());
+  }
+
+  @Test
+  public void evalDoubleErrorTest() {
+    // an un-parsable integer treatment should throw an error
+    SplitProvider splitProvider = new SplitProvider(mockSplitClient);
+
+    String flagName = "flagName";
+    String numString = "notAnInt";
+
+    when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(numString);
+
+    try {
+      splitProvider.getDoubleEvaluation(flagName, 10D, evaluationContext);
+      fail("Should have thrown an exception casting string to integer");
+    } catch (OpenFeatureError e) {
+      assertEquals(ErrorCode.PARSE_ERROR.name(), e.getMessage());
     } catch (Exception e) {
       fail("Unexpected exception occurred", e);
     }
@@ -287,16 +357,16 @@ public class SplitProviderTest {
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
     String flagName = "flagName";
-    Map<String, Object> defaultTreatment = Map.of("foo", "bar");
+    Structure defaultTreatment = new Structure(Map.of("foo", new Value("bar")));
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(null);
 
-    ProviderEvaluation<Map<String, Object>> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    ProviderEvaluation<Structure> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("");
 
-    response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
   }
 
@@ -306,11 +376,11 @@ public class SplitProviderTest {
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
     String flagName = "flagName";
-    Map<String, Object> defaultTreatment = Map.of("foo", "bar");
+    Structure defaultTreatment = new Structure(Map.of("foo", new Value("bar")));
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("control");
 
-    ProviderEvaluation<Map<String, Object>> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext, null);
+    ProviderEvaluation<Structure> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
   }
 
@@ -320,15 +390,13 @@ public class SplitProviderTest {
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
     String flagName = "flagName";
-    Map<String, Object> treatment = Map.of("robert", "grassian");
+    Structure treatment = new Structure(Map.of("abc", new Value("def")));
+    String treatmentAsString = "{\"abc\":\"def\"}";
 
-    try {
-      when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(Serialization.serialize(treatment));
-    } catch (JsonProcessingException e) {
-      fail("Unexpected exception occurred: ", e);
-    }
+    when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(treatmentAsString);
 
-    ProviderEvaluation<Map<String, Object>> response = splitProvider.getObjectEvaluation(flagName, Map.of("foo", "bar"), evaluationContext, null);
+    ProviderEvaluation<Structure> response =
+      splitProvider.getObjectEvaluation(flagName, new Structure(Map.of("foo", new Value("bar"))), evaluationContext);
     assertEquals(treatment, response.getValue());
   }
 
@@ -343,10 +411,10 @@ public class SplitProviderTest {
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(treatment);
 
     try {
-      splitProvider.getObjectEvaluation(flagName, Map.of("foo", "bar"), evaluationContext, null);
+      splitProvider.getObjectEvaluation(flagName, new Structure(Map.of("foo", new Value("bar"))), evaluationContext);
       fail("Should have thrown an exception casting string to an object");
-    } catch (GeneralError e) {
-      assertEquals("Error getting Object evaluation", e.getMessage());
+    } catch (OpenFeatureError e) {
+      assertEquals(ErrorCode.PARSE_ERROR.name(), e.getMessage());
     } catch (Exception e) {
       fail("Unexpected exception occurred", e);
     }

@@ -1,13 +1,13 @@
 package io.split.openfeature;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import dev.openfeature.javasdk.ErrorCode;
 import dev.openfeature.javasdk.EvaluationContext;
 import dev.openfeature.javasdk.FeatureProvider;
-import dev.openfeature.javasdk.FlagEvaluationOptions;
 import dev.openfeature.javasdk.Metadata;
 import dev.openfeature.javasdk.ProviderEvaluation;
 import dev.openfeature.javasdk.Reason;
+import dev.openfeature.javasdk.Structure;
+import dev.openfeature.javasdk.Value;
 import dev.openfeature.javasdk.exceptions.GeneralError;
 import dev.openfeature.javasdk.exceptions.OpenFeatureError;
 import dev.openfeature.javasdk.exceptions.ParseError;
@@ -15,7 +15,9 @@ import io.split.client.SplitClient;
 import io.split.openfeature.utils.Serialization;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SplitProvider implements FeatureProvider {
 
@@ -41,7 +43,7 @@ public class SplitProvider implements FeatureProvider {
   }
 
   @Override
-  public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+  public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultTreatment, EvaluationContext evaluationContext) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
       if (noTreatment(evaluated)) {
@@ -68,7 +70,7 @@ public class SplitProvider implements FeatureProvider {
   }
 
   @Override
-  public ProviderEvaluation<String> getStringEvaluation(String key, String defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+  public ProviderEvaluation<String> getStringEvaluation(String key, String defaultTreatment, EvaluationContext evaluationContext) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
       if (noTreatment(evaluated)) {
@@ -83,7 +85,7 @@ public class SplitProvider implements FeatureProvider {
   }
 
   @Override
-  public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+  public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultTreatment, EvaluationContext evaluationContext) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
       if (noTreatment(evaluated)) {
@@ -101,7 +103,7 @@ public class SplitProvider implements FeatureProvider {
   }
 
   @Override
-  public ProviderEvaluation<Double> getDoubleEvaluation(String key, Double defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+  public ProviderEvaluation<Double> getDoubleEvaluation(String key, Double defaultTreatment, EvaluationContext evaluationContext) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
       if (noTreatment(evaluated)) {
@@ -119,15 +121,18 @@ public class SplitProvider implements FeatureProvider {
   }
 
   @Override
-  public <T> ProviderEvaluation<T> getObjectEvaluation(String key, T defaultTreatment, EvaluationContext evaluationContext, FlagEvaluationOptions flagEvaluationOptions) {
+  public ProviderEvaluation<Structure> getObjectEvaluation(String key, Structure defaultTreatment, EvaluationContext evaluationContext) {
     try {
       String evaluated = evaluateTreatment(key, evaluationContext);
       if (noTreatment(evaluated)) {
         return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND.name());
       }
-      T value = Serialization.deserialize(evaluated, new TypeReference<T>() {
-      });
-      return constructProviderEvaluation(value, evaluated);
+      Structure structure = new Structure();
+      Map<String, Object> rawMap = Serialization.stringToMap(evaluated);
+      for (Map.Entry<String, Object> rawEntry : rawMap.entrySet()) {
+        structure.add(rawEntry.getKey(),(String) rawEntry.getValue());
+      }
+      return constructProviderEvaluation(structure, evaluated);
     } catch (OpenFeatureError e) {
       throw e;
     } catch (Exception e) {
@@ -136,12 +141,7 @@ public class SplitProvider implements FeatureProvider {
   }
 
   public Map<String, Object> transformContext(EvaluationContext context) {
-    Map<String, Object> attributes = new HashMap<>();
-    attributes.putAll(context.getStringAttributes());
-    attributes.putAll(context.getIntegerAttributes());
-    attributes.putAll(context.getBooleanAttributes());
-    attributes.putAll(context.getStructureAttributes());
-    return attributes;
+    return getMapFromStructMap(context.asMap());
   }
 
   private String evaluateTreatment(String key, EvaluationContext evaluationContext) {
@@ -170,5 +170,54 @@ public class SplitProvider implements FeatureProvider {
       .variant(variant)
       .errorCode(errorCode)
       .build();
+  }
+
+  private Map<String, Object> getMapFromStructMap(Map<String, Value> structMap) {
+    Map<String, Object> toReturn = new HashMap<>();
+    for (Map.Entry<String, Value> entry : structMap.entrySet()) {
+      String key = entry.getKey();
+      Value value = entry.getValue();
+      toReturn.put(key, getInnerValue(value));
+    }
+    return toReturn;
+  }
+
+  private Map<String, Object> getMapFromStructure(Structure structure) {
+    return getMapFromStructMap(structure.asMap());
+  }
+
+  private Object getInnerValue(Value value) {
+    Object object = value.asBoolean();
+    if (object != null) {
+      return object;
+    }
+    object = value.asDouble();
+    if (object != null) {
+      return object;
+    }
+    object = value.asInteger();
+    if (object != null) {
+      return object;
+    }
+    object = value.asString();
+    if (object != null) {
+      return object;
+    }
+    object = value.asZonedDateTime();
+    if (object != null) {
+      return object.toString();
+    }
+    object = value.asStructure();
+    if (object != null) {
+      // must return a map
+      return getMapFromStructure((Structure) object);
+    }
+    object = value.asList();
+    if (object != null) {
+      // must return a list of inner objects
+      List<Value> values = (List<Value>) object;
+      return values.stream().map(this::getInnerValue).collect(Collectors.toList());
+    }
+    return null;
   }
 }
