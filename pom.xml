@@ -6,7 +6,7 @@
 
   <groupId>io.split.openfeature</groupId>
   <artifactId>split-openfeature-provider</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>split-openfeature-provider-java</name>
   <url>www.split.io</url>
