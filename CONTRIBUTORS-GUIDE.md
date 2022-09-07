@@ -25,4 +25,4 @@ The Split Provider is an open source project and we welcome feedback and contrib
 
 # Contact
 
-If you have any other questions or need to contact us directly in a private manner send us a note at octo@split.io
+If you have any other questions or need to contact us directly in a private manner send us a note at sdks@split.io
