@@ -65,9 +65,9 @@ public class ClientTest {
     Integer resultInt = client.getIntegerValue(flagName, defaultInt);
     assertEquals(defaultInt, resultInt);
 
-    Structure defaultStructure = new Structure(Map.of("foo", new Value("bar")));
-    Structure resultStructure = client.getObjectValue(flagName, defaultStructure);
-    assertEquals(defaultStructure, resultStructure);
+    Value defaultValue = new Value(new Structure(Map.of("foo", new Value("bar"))));
+    Value resultValue = client.getObjectValue(flagName, defaultValue);
+    assertEquals(defaultValue, resultValue);
   }
 
   @Test
@@ -125,8 +125,8 @@ public class ClientTest {
 
   @Test
   public void getObjectSplitTest() {
-    Structure result = client.getObjectValue("obj_feature", new Structure());
-    assertEquals(new Structure(Map.of("key", new Value("value"))), result);
+    Value result = client.getObjectValue("obj_feature", new Value());
+    assertEquals(new Value(new Structure(Map.of("key", new Value("value")))), result);
   }
 
   @Test
@@ -176,10 +176,10 @@ public class ClientTest {
 
   @Test
   public void getObjectDetailsTest() {
-    FlagEvaluationDetails<Structure> details = client.getObjectDetails("obj_feature", new Structure());
+    FlagEvaluationDetails<Value> details = client.getObjectDetails("obj_feature", new Value());
     assertEquals("obj_feature", details.getFlagKey());
     assertEquals(Reason.TARGETING_MATCH, details.getReason());
-    assertEquals(new Structure(Map.of("key", new Value("value"))), details.getValue());
+    assertEquals(new Value(new Structure(Map.of("key", new Value("value")))), details.getValue());
     // the flag's treatment is stored as a string, and the variant is that raw string
     assertEquals("{\"key\": \"value\"}", details.getVariant());
     assertNull(details.getErrorCode());
@@ -238,12 +238,12 @@ public class ClientTest {
   @Test
   public void getObjectFailTest() {
     // attempt to fetch an int as an object. Should result in the default
-    Structure defaultStruct = new Structure(Map.of("foo", new Value("bar")));
-    Structure value = client.getObjectValue("int_feature", defaultStruct);
-    assertEquals(defaultStruct, value);
+    Value defaultValue = new Value(new Structure(Map.of("foo", new Value("bar"))));
+    Value value = client.getObjectValue("int_feature", defaultValue);
+    assertEquals(defaultValue, value);
 
-    FlagEvaluationDetails<Structure> details = client.getObjectDetails("int_feature", defaultStruct);
-    assertEquals(defaultStruct, details.getValue());
+    FlagEvaluationDetails<Value> details = client.getObjectDetails("int_feature", defaultValue);
+    assertEquals(defaultValue, details.getValue());
     assertEquals(ErrorCode.PARSE_ERROR.name(), details.getErrorCode());
     assertEquals(Reason.ERROR, details.getReason());
     assertNull(details.getVariant());

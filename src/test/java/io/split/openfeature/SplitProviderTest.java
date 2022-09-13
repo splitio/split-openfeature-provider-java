@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -360,11 +361,11 @@ public class SplitProviderTest {
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
     String flagName = "flagName";
-    Structure defaultTreatment = new Structure(Map.of("foo", new Value("bar")));
+    Value defaultTreatment = new Value(new Structure(Map.of("foo", new Value("bar"))));
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(null);
 
-    ProviderEvaluation<Structure> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
+    ProviderEvaluation<Value> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("");
@@ -379,11 +380,11 @@ public class SplitProviderTest {
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
     String flagName = "flagName";
-    Structure defaultTreatment = new Structure(Map.of("foo", new Value("bar")));
+    Value defaultTreatment = new Value(new Structure(Map.of("foo", new Value("bar"))));
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("control");
 
-    ProviderEvaluation<Structure> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
+    ProviderEvaluation<Value> response = splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(defaultTreatment, response.getValue());
   }
 
@@ -393,13 +394,14 @@ public class SplitProviderTest {
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
     String flagName = "flagName";
-    Structure treatment = new Structure(Map.of("abc", new Value("def")));
+    Value treatment = new Value(new Structure(Map.of("abc", new Value("def"))));
     String treatmentAsString = "{\"abc\":\"def\"}";
+    Value defaultTreatment = new Value(new Structure(Map.of("foo", new Value("bar"))));
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(treatmentAsString);
 
-    ProviderEvaluation<Structure> response =
-      splitProvider.getObjectEvaluation(flagName, new Structure(Map.of("foo", new Value("bar"))), evaluationContext);
+    ProviderEvaluation<Value> response =
+      splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(treatment, response.getValue());
   }
 
@@ -409,8 +411,9 @@ public class SplitProviderTest {
     SplitProvider splitProvider = new SplitProvider(mockSplitClient);
 
     String flagName = "flagName";
-    ZonedDateTime zonedDateTime = ZonedDateTime.of(2020, 1, 10, 0, 0, 0, 0, ZoneId.of("UTC"));
-    Structure treatment = new Structure(Map.of(
+    Value defaultTreatment = new Value(new Structure(Map.of("foo", new Value("bar"))));
+    Instant instant = ZonedDateTime.of(2020, 1, 10, 0, 0, 0, 0, ZoneId.of("UTC")).toInstant();
+    Value treatment = new Value(new Structure(Map.of(
       "string", new Value("blah"),
       "int", new Value(10),
       "double", new Value(100D),
@@ -434,14 +437,14 @@ public class SplitProviderTest {
             new Structure(Map.of(
               "ee", new Value(1)
             ))))),
-      "dateTime", new Value(zonedDateTime)
-    ));
-    String treatmentAsString = "{\"string\":\"blah\",\"int\":10,\"double\":100.0,\"bool\":true, \"struct\":{\"foo\":\"bar\",\"baz\":10,\"innerMap\":{\"aa\":\"bb\"}},\"list\":[1,true,{\"cc\":\"dd\"},{\"ee\":1}],\"dateTime\":\"2020-01-10T00:00Z[UTC]\"}";
+      "dateTime", new Value(instant)
+    )));
+    String treatmentAsString = "{\"string\":\"blah\",\"int\":10,\"double\":100.0,\"bool\":true, \"struct\":{\"foo\":\"bar\",\"baz\":10,\"innerMap\":{\"aa\":\"bb\"}},\"list\":[1,true,{\"cc\":\"dd\"},{\"ee\":1}],\"dateTime\":\"2020-01-10T00:00:00Z\"}";
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(treatmentAsString);
 
-    ProviderEvaluation<Structure> response =
-      splitProvider.getObjectEvaluation(flagName, new Structure(Map.of("foo", new Value("bar"))), evaluationContext);
+    ProviderEvaluation<Value> response =
+      splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
     assertEquals(treatment, response.getValue());
   }
 
@@ -452,11 +455,12 @@ public class SplitProviderTest {
 
     String flagName = "flagName";
     String treatment = "not an object";
+    Value defaultTreatment = new Value(new Structure(Map.of("foo", new Value("bar"))));
 
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn(treatment);
 
     try {
-      splitProvider.getObjectEvaluation(flagName, new Structure(Map.of("foo", new Value("bar"))), evaluationContext);
+      splitProvider.getObjectEvaluation(flagName, defaultTreatment, evaluationContext);
       fail("Should have thrown an exception casting string to an object");
     } catch (OpenFeatureError e) {
       assertEquals(ErrorCode.PARSE_ERROR.name(), e.getMessage());
