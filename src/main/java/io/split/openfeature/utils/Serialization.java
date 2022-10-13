@@ -3,8 +3,8 @@ package io.split.openfeature.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.openfeature.javasdk.ErrorCode;
-import dev.openfeature.javasdk.exceptions.ParseError;
+import dev.openfeature.sdk.ErrorCode;
+import dev.openfeature.sdk.exceptions.ParseError;
 
 import java.util.Map;
 

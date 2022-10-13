@@ -1,13 +1,14 @@
 package io.split.openfeature;
 
-import dev.openfeature.javasdk.Client;
-import dev.openfeature.javasdk.ErrorCode;
-import dev.openfeature.javasdk.EvaluationContext;
-import dev.openfeature.javasdk.FlagEvaluationDetails;
-import dev.openfeature.javasdk.OpenFeatureAPI;
-import dev.openfeature.javasdk.Reason;
-import dev.openfeature.javasdk.Structure;
-import dev.openfeature.javasdk.Value;
+import dev.openfeature.sdk.Client;
+import dev.openfeature.sdk.ErrorCode;
+import dev.openfeature.sdk.EvaluationContext;
+import dev.openfeature.sdk.FlagEvaluationDetails;
+import dev.openfeature.sdk.MutableContext;
+import dev.openfeature.sdk.MutableStructure;
+import dev.openfeature.sdk.OpenFeatureAPI;
+import dev.openfeature.sdk.Reason;
+import dev.openfeature.sdk.Value;
 import io.split.client.SplitClient;
 import io.split.client.SplitClientConfig;
 import io.split.client.SplitFactoryBuilder;
@@ -41,7 +42,7 @@ public class ClientTest {
       System.out.println("Unexpected Exception occurred initializing Split Provider.");
     }
     client = openFeatureAPI.getClient("Split Client");
-    EvaluationContext evaluationContext = new EvaluationContext();
+    EvaluationContext evaluationContext = new MutableContext();
     String targetingKey = "key";
     evaluationContext.setTargetingKey(targetingKey);
     client.setEvaluationContext(evaluationContext);
@@ -65,18 +66,18 @@ public class ClientTest {
     Integer resultInt = client.getIntegerValue(flagName, defaultInt);
     assertEquals(defaultInt, resultInt);
 
-    Structure defaultStructure = new Structure(Map.of("foo", new Value("bar")));
-    Structure resultStructure = client.getObjectValue(flagName, defaultStructure);
+    Value defaultStructure = mapToValue(Map.of("foo", new Value("bar")));
+    Value resultStructure = client.getObjectValue(flagName, defaultStructure);
     assertEquals(defaultStructure, resultStructure);
   }
 
   @Test
   public void missingTargetingKeyTest() {
     // Split requires a targeting key and should return the default treatment and throw an error if not provided
-    client.setEvaluationContext(new EvaluationContext());
+    client.setEvaluationContext(new MutableContext());
     FlagEvaluationDetails<Boolean> details = client.getBooleanDetails("non-existent-feature", false);
     assertFalse(details.getValue());
-    assertEquals("TARGETING_KEY_MISSING", details.getErrorCode());
+    assertEquals(ErrorCode.TARGETING_KEY_MISSING, details.getErrorCode());
   }
 
   @Test
@@ -87,7 +88,7 @@ public class ClientTest {
     FlagEvaluationDetails<Boolean> details = client.getBooleanDetails("non-existent-feature", false);
     assertFalse(details.getValue());
     assertEquals("control", details.getVariant());
-    assertEquals(ErrorCode.FLAG_NOT_FOUND.name(), details.getErrorCode());
+    assertEquals(ErrorCode.FLAG_NOT_FOUND, details.getErrorCode());
   }
 
   @Test
@@ -104,8 +105,8 @@ public class ClientTest {
     assertTrue(result);
 
     // if we override the evaluation context for this check to use a different key,
-    // this should take priority and therefore we should receive a treatment of off
-    EvaluationContext evaluationContext = new EvaluationContext();
+    // this should take priority, and therefore we should receive a treatment of off
+    EvaluationContext evaluationContext = new MutableContext();
     evaluationContext.setTargetingKey("randomKey");
     result = client.getBooleanValue("my_feature", true, evaluationContext);
     assertFalse(result);
@@ -125,8 +126,8 @@ public class ClientTest {
 
   @Test
   public void getObjectSplitTest() {
-    Structure result = client.getObjectValue("obj_feature", new Structure());
-    assertEquals(new Structure(Map.of("key", new Value("value"))), result);
+    Value result = client.getObjectValue("obj_feature", new Value());
+    assertEquals(mapToValue(Map.of("key", new Value("value"))), result);
   }
 
   @Test
@@ -145,7 +146,7 @@ public class ClientTest {
   public void getBooleanDetailsTest() {
     FlagEvaluationDetails<Boolean> details = client.getBooleanDetails("some_other_feature", true);
     assertEquals("some_other_feature", details.getFlagKey());
-    assertEquals(Reason.TARGETING_MATCH, details.getReason());
+    assertEquals(Reason.TARGETING_MATCH.name(), details.getReason());
     assertFalse(details.getValue());
     // the flag has a treatment of "off", this is returned as a value of false but the variant is still "off"
     assertEquals("off", details.getVariant());
@@ -156,7 +157,7 @@ public class ClientTest {
   public void getIntegerDetailsTest() {
     FlagEvaluationDetails<Integer> details = client.getIntegerDetails("int_feature", 0);
     assertEquals("int_feature", details.getFlagKey());
-    assertEquals(Reason.TARGETING_MATCH, details.getReason());
+    assertEquals(Reason.TARGETING_MATCH.name(), details.getReason());
     assertEquals(32, details.getValue());
     // the flag has a treatment of "32", this is resolved to an integer but the variant is still "32"
     assertEquals("32", details.getVariant());
@@ -167,7 +168,7 @@ public class ClientTest {
   public void getStringDetailsTest() {
     FlagEvaluationDetails<String> details = client.getStringDetails("some_other_feature", "blah");
     assertEquals("some_other_feature", details.getFlagKey());
-    assertEquals(Reason.TARGETING_MATCH, details.getReason());
+    assertEquals(Reason.TARGETING_MATCH.name(), details.getReason());
     assertEquals("off", details.getValue());
     // the flag has a treatment of "off", since this is a string the variant is the same as the value
     assertEquals("off", details.getVariant());
@@ -176,10 +177,10 @@ public class ClientTest {
 
   @Test
   public void getObjectDetailsTest() {
-    FlagEvaluationDetails<Structure> details = client.getObjectDetails("obj_feature", new Structure());
+    FlagEvaluationDetails<Value> details = client.getObjectDetails("obj_feature", new Value());
     assertEquals("obj_feature", details.getFlagKey());
-    assertEquals(Reason.TARGETING_MATCH, details.getReason());
-    assertEquals(new Structure(Map.of("key", new Value("value"))), details.getValue());
+    assertEquals(Reason.TARGETING_MATCH.name(), details.getReason());
+    assertEquals(mapToValue(Map.of("key", new Value("value"))), details.getValue());
     // the flag's treatment is stored as a string, and the variant is that raw string
     assertEquals("{\"key\": \"value\"}", details.getVariant());
     assertNull(details.getErrorCode());
@@ -189,7 +190,7 @@ public class ClientTest {
   public void getDoubleDetailsTest() {
     FlagEvaluationDetails<Double> details = client.getDoubleDetails("int_feature", 0D);
     assertEquals("int_feature", details.getFlagKey());
-    assertEquals(Reason.TARGETING_MATCH, details.getReason());
+    assertEquals(Reason.TARGETING_MATCH.name(), details.getReason());
     assertEquals(32D, details.getValue());
     // the flag has a treatment of "32", this is resolved to a double but the variant is still "32"
     assertEquals("32", details.getVariant());
@@ -198,14 +199,14 @@ public class ClientTest {
 
   @Test
   public void getBooleanFailTest() {
-    // attempt to fetch an object treatment as a boolean. Should result in the default
+    // attempt to fetch an object treatment as a Boolean. Should result in the default
     Boolean value = client.getBooleanValue("obj_feature", false);
     assertFalse(value);
 
     FlagEvaluationDetails<Boolean> details = client.getBooleanDetails("obj_feature", false);
     assertFalse(details.getValue());
-    assertEquals(ErrorCode.PARSE_ERROR.name(), details.getErrorCode());
-    assertEquals(Reason.ERROR, details.getReason());
+    assertEquals(ErrorCode.PARSE_ERROR, details.getErrorCode());
+    assertEquals(Reason.ERROR.name(), details.getReason());
     assertNull(details.getVariant());
   }
 
@@ -217,8 +218,8 @@ public class ClientTest {
 
     FlagEvaluationDetails<Integer> details = client.getIntegerDetails("obj_feature", 10);
     assertEquals(10, details.getValue());
-    assertEquals(ErrorCode.PARSE_ERROR.name(), details.getErrorCode());
-    assertEquals(Reason.ERROR, details.getReason());
+    assertEquals(ErrorCode.PARSE_ERROR, details.getErrorCode());
+    assertEquals(Reason.ERROR.name(), details.getReason());
     assertNull(details.getVariant());
   }
 
@@ -230,22 +231,26 @@ public class ClientTest {
 
     FlagEvaluationDetails<Double> details = client.getDoubleDetails("obj_feature", 10D);
     assertEquals(10D, details.getValue());
-    assertEquals(ErrorCode.PARSE_ERROR.name(), details.getErrorCode());
-    assertEquals(Reason.ERROR, details.getReason());
+    assertEquals(ErrorCode.PARSE_ERROR, details.getErrorCode());
+    assertEquals(Reason.ERROR.name(), details.getReason());
     assertNull(details.getVariant());
   }
 
   @Test
   public void getObjectFailTest() {
     // attempt to fetch an int as an object. Should result in the default
-    Structure defaultStruct = new Structure(Map.of("foo", new Value("bar")));
-    Structure value = client.getObjectValue("int_feature", defaultStruct);
-    assertEquals(defaultStruct, value);
+    Value defaultValue = mapToValue(Map.of("foo", new Value("bar")));
+    Value value = client.getObjectValue("int_feature", defaultValue);
+    assertEquals(defaultValue, value);
 
-    FlagEvaluationDetails<Structure> details = client.getObjectDetails("int_feature", defaultStruct);
-    assertEquals(defaultStruct, details.getValue());
-    assertEquals(ErrorCode.PARSE_ERROR.name(), details.getErrorCode());
-    assertEquals(Reason.ERROR, details.getReason());
+    FlagEvaluationDetails<Value> details = client.getObjectDetails("int_feature", defaultValue);
+    assertEquals(defaultValue, details.getValue());
+    assertEquals(ErrorCode.PARSE_ERROR, details.getErrorCode());
+    assertEquals(Reason.ERROR.name(), details.getReason());
     assertNull(details.getVariant());
+  }
+
+  private Value mapToValue(Map<String, Value> map) {
+    return new Value(new MutableStructure(map));
   }
 }

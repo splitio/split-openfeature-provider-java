@@ -74,9 +74,8 @@
     </dependency>
     <dependency>
       <groupId>dev.openfeature</groupId>
-      <artifactId>javasdk</artifactId>
-      <!--TODO: use stable version once released-->
-      <version>0.1.0</version>
+      <artifactId>sdk</artifactId>
+      <version>0.3.0</version>
     </dependency>
   </dependencies>
 
