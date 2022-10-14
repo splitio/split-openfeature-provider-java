@@ -6,7 +6,7 @@
 
   <groupId>io.split.openfeature</groupId>
   <artifactId>split-openfeature-provider</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
 
   <name>split-openfeature-provider-java</name>
   <description>Split OpenFeature Java Provider</description>
@@ -74,9 +74,8 @@
     </dependency>
     <dependency>
       <groupId>dev.openfeature</groupId>
-      <artifactId>javasdk</artifactId>
-      <!--TODO: use stable version once released-->
-      <version>0.1.0</version>
+      <artifactId>sdk</artifactId>
+      <version>0.3.1</version>
     </dependency>
   </dependencies>
 

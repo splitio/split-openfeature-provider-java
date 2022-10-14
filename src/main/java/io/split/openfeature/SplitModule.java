@@ -1,6 +1,6 @@
 package io.split.openfeature;
 
-import dev.openfeature.javasdk.exceptions.GeneralError;
+import dev.openfeature.sdk.exceptions.GeneralError;
 import io.split.client.SplitClient;
 import io.split.client.SplitClientConfig;
 import io.split.client.SplitFactory;

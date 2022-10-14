@@ -43,17 +43,17 @@ One important note is that the Split Provider **requires a targeting key** to be
 ```java
 Client client = api.getClient("CLIENT_NAME");
 
-EvaluationContext context = new EvaluationContext("TARGETING_KEY");
+EvaluationContext context = new MutableContext("TARGETING_KEY");
 Boolean boolValue = client.getBooleanValue("boolFlag", false, context);
 ```
 If the same targeting key is used repeatedly, the evaluation context may be set at the client level 
 ```java
-EvaluationContext context = new EvaluationContext("TARGETING_KEY");
+EvaluationContext context = new MutableContext("TARGETING_KEY");
 client.setEvaluationContext(context)
 ```
 or at the OpenFeatureAPI level 
 ```java
-EvaluationContext context = new EvaluationContext("TARGETING_KEY");
+EvaluationContext context = new MutableContext("TARGETING_KEY");
 OpenFeatureAPI.getInstance().setCtx(context)
 ````
 If the context was set at the client or api level, it is not required to provide it during flag evaluation.
