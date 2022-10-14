@@ -75,7 +75,7 @@
     <dependency>
       <groupId>dev.openfeature</groupId>
       <artifactId>sdk</artifactId>
-      <version>0.3.0</version>
+      <version>0.3.1</version>
     </dependency>
   </dependencies>
 
