@@ -155,7 +155,7 @@ public class SplitProviderTest {
     when(mockSplitClient.getTreatment(eq(key), eq(flagName), anyMap())).thenReturn("a random string");
     try {
       splitProvider.getBooleanEvaluation(flagName, false, evaluationContext);
-      fail("Should have thrown an exception casting string to integer");
+      fail("Should have thrown an exception casting string to boolean");
     } catch (OpenFeatureError e) {
       assertEquals(ErrorCode.PARSE_ERROR, e.getErrorCode());
     } catch (Exception e) {
