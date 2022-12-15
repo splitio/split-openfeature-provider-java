@@ -8,6 +8,15 @@ This Provider is designed to allow the use of OpenFeature with Split, the platfo
 This SDK is compatible with Java 11 and higher.
 
 ## Getting started
+### Add it to your maven build
+```java
+<dependency>
+    <groupId>io.split.openfeature</groupId>
+    <artifactId>split-openfeature-provider</artifactId>
+    <version>1.1.0</version>
+</dependency>
+```
+### Configure it
 Below is a simple example that describes the instantiation of the Split Provider. Please see the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api) for details on how to use the OpenFeature SDK.
 
 ```java
