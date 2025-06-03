@@ -3,4 +3,4 @@
 1.1.0
 - Up tp date with spec v0.5.0 and java sdk v0.3.1
 1.2.0
-- Up tp date with spec v0.7.0 and java sdk v1.15.1. Using split client v4.16.0
+- Up to date with spec v0.7.0 and java sdk v1.15.1. Using split client v4.16.0
