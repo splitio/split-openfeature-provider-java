@@ -35,7 +35,7 @@ public class SplitProviderTest {
   private SplitClient mockSplitClient;
 
   @BeforeEach
-  private void init() {
+  public void init() {
     MockitoAnnotations.openMocks(this);
 
     key = "key";
