@@ -13,7 +13,7 @@ This SDK is compatible with Java 11 and higher.
 <dependency>
     <groupId>io.split.openfeature</groupId>
     <artifactId>split-openfeature-provider</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 ### Configure it
