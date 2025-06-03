@@ -39,8 +39,7 @@ public class SplitProviderTest {
     MockitoAnnotations.openMocks(this);
 
     key = "key";
-    evaluationContext = new MutableContext();
-    evaluationContext.setTargetingKey(key);
+    evaluationContext = new MutableContext(key);
   }
 
   @Test
