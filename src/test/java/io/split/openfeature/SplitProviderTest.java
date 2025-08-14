@@ -35,12 +35,11 @@ public class SplitProviderTest {
   private SplitClient mockSplitClient;
 
   @BeforeEach
-  private void init() {
+  public void init() {
     MockitoAnnotations.openMocks(this);
 
     key = "key";
-    evaluationContext = new MutableContext();
-    evaluationContext.setTargetingKey(key);
+    evaluationContext = new MutableContext(key);
   }
 
   @Test
