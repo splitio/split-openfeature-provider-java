@@ -8,11 +8,20 @@ This Provider is designed to allow the use of OpenFeature with Split, the platfo
 This SDK is compatible with Java 11 and higher.
 
 ## Getting started
+### Add it to your maven build
+```java
+<dependency>
+    <groupId>io.split.openfeature</groupId>
+    <artifactId>split-openfeature-provider</artifactId>
+    <version>1.1.0</version>
+</dependency>
+```
+### Configure it
 Below is a simple example that describes the instantiation of the Split Provider. Please see the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api) for details on how to use the OpenFeature SDK.
 
 ```java
-import dev.openfeature.javasdk.OpenFeatureAPI;
-import io.split.openfeature.SplitProvider
+import dev.openfeature.sdk.OpenFeatureAPI;
+import io.split.openfeature.SplitProvider;
 
 OpenFeatureAPI api = OpenFeatureAPI.getInstance();
 api.setProvider(new SplitProvider("YOUR_API_KEY"));
@@ -20,8 +29,8 @@ api.setProvider(new SplitProvider("YOUR_API_KEY"));
 
 If you are more familiar with Split or want access to other initialization options, you can provide a `SplitClient` to the constructor. See the [Split Java SDK Documentation](https://help.split.io/hc/en-us/articles/360020405151-Java-SDK) for more information.
 ```java
-import dev.openfeature.javasdk.OpenFeatureAPI;
-import io.split.openfeature.SplitProvider
+import dev.openfeature.sdk.OpenFeatureAPI;
+import io.split.openfeature.SplitProvider;
 import io.split.client.SplitClient;
 import io.split.client.SplitClientConfig;
 import io.split.client.SplitFactoryBuilder;
@@ -43,18 +52,18 @@ One important note is that the Split Provider **requires a targeting key** to be
 ```java
 Client client = api.getClient("CLIENT_NAME");
 
-EvaluationContext context = new EvaluationContext("TARGETING_KEY");
+EvaluationContext context = new MutableContext("TARGETING_KEY");
 Boolean boolValue = client.getBooleanValue("boolFlag", false, context);
 ```
 If the same targeting key is used repeatedly, the evaluation context may be set at the client level 
 ```java
-EvaluationContext context = new EvaluationContext("TARGETING_KEY");
+EvaluationContext context = new MutableContext("TARGETING_KEY");
 client.setEvaluationContext(context)
 ```
 or at the OpenFeatureAPI level 
 ```java
-EvaluationContext context = new EvaluationContext("TARGETING_KEY");
-OpenFeatureAPI.getInstance().setCtx(context)
+EvaluationContext context = new MutableContext("TARGETING_KEY");
+OpenFeatureAPI.getInstance().setEvaluationContext(context)
 ````
 If the context was set at the client or api level, it is not required to provide it during flag evaluation.
 

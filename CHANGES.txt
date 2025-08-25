@@ -1,2 +1,4 @@
 1.0.0
-- First release. Up to date with spec v0.1.0
+- First release. Up to date with java sdk v0.1.0
+1.1.0
+- Up tp date with spec v0.5.0 and java sdk v0.3.1
