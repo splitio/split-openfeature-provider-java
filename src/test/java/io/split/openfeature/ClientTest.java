@@ -42,9 +42,8 @@ public class ClientTest {
       System.out.println("Unexpected Exception occurred initializing Split Provider.");
     }
     client = openFeatureAPI.getClient("Split Client");
-    EvaluationContext evaluationContext = new MutableContext();
     String targetingKey = "key";
-    evaluationContext.setTargetingKey(targetingKey);
+    EvaluationContext evaluationContext = new MutableContext(targetingKey);
     client.setEvaluationContext(evaluationContext);
   }
 
@@ -106,8 +105,7 @@ public class ClientTest {
 
     // if we override the evaluation context for this check to use a different key,
     // this should take priority, and therefore we should receive a treatment of off
-    EvaluationContext evaluationContext = new MutableContext();
-    evaluationContext.setTargetingKey("randomKey");
+    EvaluationContext evaluationContext = new MutableContext("randomKey");
     result = client.getBooleanValue("my_feature", true, evaluationContext);
     assertFalse(result);
   }
