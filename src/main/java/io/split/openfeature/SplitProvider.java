@@ -3,21 +3,26 @@ package io.split.openfeature;
 import dev.openfeature.sdk.ErrorCode;
 import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.FeatureProvider;
+import dev.openfeature.sdk.ImmutableMetadata;
 import dev.openfeature.sdk.Metadata;
 import dev.openfeature.sdk.MutableStructure;
 import dev.openfeature.sdk.ProviderEvaluation;
 import dev.openfeature.sdk.Reason;
+import dev.openfeature.sdk.TrackingEventDetails;
 import dev.openfeature.sdk.Value;
 import dev.openfeature.sdk.exceptions.GeneralError;
 import dev.openfeature.sdk.exceptions.OpenFeatureError;
 import dev.openfeature.sdk.exceptions.ParseError;
 import dev.openfeature.sdk.exceptions.TargetingKeyMissingError;
 import io.split.client.SplitClient;
+import io.split.client.api.SplitResult;
 import io.split.openfeature.utils.Serialization;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class SplitProvider implements FeatureProvider {
@@ -44,126 +49,138 @@ public class SplitProvider implements FeatureProvider {
   }
 
   @Override
-  public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultTreatment, EvaluationContext evaluationContext) {
-    try {
-      String evaluated = evaluateTreatment(key, evaluationContext);
-      if (noTreatment(evaluated)) {
-        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND);
-      }
+  public ProviderEvaluation<Boolean> getBooleanEvaluation(
+          String key, Boolean defaultVal, EvaluationContext ctx) {
+    return getEvaluation(key, defaultVal, ctx, s -> {
       // if treatment is "on" or "true" we treat that as true
       // if it is "off" or "false" we treat it as false
       // if it is some other value we throw an error (sdk will catch it and throw default treatment)
-      boolean value;
-      if (Boolean.parseBoolean(evaluated) || evaluated.equals("on")) {
-        value = true;
-      } else if (evaluated.equalsIgnoreCase("false") || evaluated.equals("off")) {
-        value = false;
+      if (Boolean.parseBoolean(s) || s.equals("on")) {
+        return true;
+      } else if (s.equalsIgnoreCase("false") || s.equals("off")) {
+        return false;
       } else {
         throw new ParseError();
       }
-      return constructProviderEvaluation(value, evaluated);
-    } catch (OpenFeatureError e) {
-      throw e;
-    } catch (Exception e) {
-      throw new GeneralError("Error getting boolean evaluation", e);
-    }
-
+    }, "Boolean");
   }
 
   @Override
-  public ProviderEvaluation<String> getStringEvaluation(String key, String defaultTreatment, EvaluationContext evaluationContext) {
+  public ProviderEvaluation<String> getStringEvaluation(
+          String key, String defaultVal, EvaluationContext ctx) {
+    return getEvaluation(key, defaultVal, ctx, s -> s, "String");
+  }
+
+  @Override
+  public ProviderEvaluation<Integer> getIntegerEvaluation(
+          String key, Integer defaultVal, EvaluationContext ctx) {
+    return getEvaluation(key, defaultVal, ctx, Integer::valueOf, "Integer");
+  }
+
+  @Override
+  public ProviderEvaluation<Double> getDoubleEvaluation(
+          String key, Double defaultTreatment, EvaluationContext ctx) {
+
+    return getEvaluation(key, defaultTreatment, ctx, s -> {
+      if (s == null) throw new NumberFormatException("null");
+      return Double.valueOf(s.trim());
+    }, "Double");
+  }
+
+  @Override
+  public ProviderEvaluation<Value> getObjectEvaluation(
+          String key, Value defaultVal, EvaluationContext ctx) {
+    return getEvaluation(key, defaultVal, ctx, s -> {
+      Map<String, Object> rawMap = Serialization.stringToMap(s);
+      return mapToValue(rawMap);
+    }, "Object");
+  }
+
+  @FunctionalInterface
+  interface Mapper<T> {
+    T map(String s) throws Exception;
+  }
+
+  private <T> ProviderEvaluation<T> getEvaluation(
+          String key,
+          T defaultValue,
+          EvaluationContext ctx,
+          Mapper<T> mapper,
+          String typeLabel
+  ) {
     try {
-      String evaluated = evaluateTreatment(key, evaluationContext);
-      if (noTreatment(evaluated)) {
-        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND);
+      SplitResult evaluated = evaluateTreatment(key, ctx);
+      String treatment = evaluated.treatment();
+      String config = evaluated.config();
+      ImmutableMetadata metadata = ImmutableMetadata.builder().addString("config", config).build();
+      System.out.println(metadata.getString("config"));
+      if (noTreatment(treatment)) {
+        return constructProviderEvaluation(
+                defaultValue, treatment, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND, metadata);
       }
-      return constructProviderEvaluation(evaluated, evaluated);
+      T mapped = mapper.map(treatment);
+      return constructProviderEvaluation(mapped, treatment, metadata);
+
     } catch (OpenFeatureError e) {
       throw e;
     } catch (Exception e) {
-      throw new GeneralError("Error getting String evaluation", e);
+      throw new GeneralError("Error getting " + typeLabel + " evaluation", e);
     }
   }
 
   @Override
-  public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultTreatment, EvaluationContext evaluationContext) {
-    try {
-      String evaluated = evaluateTreatment(key, evaluationContext);
-      if (noTreatment(evaluated)) {
-        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND);
-      }
-      Integer value = Integer.valueOf(evaluated);
-      return constructProviderEvaluation(value, evaluated);
-    } catch (OpenFeatureError e) {
-      throw e;
-    } catch (NumberFormatException e) {
-      throw new ParseError();
-    } catch (Exception e) {
-      throw new GeneralError("Error getting Integer evaluation", e);
-    }
-  }
+  public void track(String eventName, EvaluationContext context, TrackingEventDetails details) {
 
-  @Override
-  public ProviderEvaluation<Double> getDoubleEvaluation(String key, Double defaultTreatment, EvaluationContext evaluationContext) {
-    try {
-      String evaluated = evaluateTreatment(key, evaluationContext);
-      if (noTreatment(evaluated)) {
-        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND);
-      }
-      Double value = Double.valueOf(evaluated);
-      return constructProviderEvaluation(value, evaluated);
-    } catch (OpenFeatureError e) {
-      throw e;
-    } catch (NumberFormatException e) {
-      throw new ParseError();
-    } catch (Exception e) {
-      throw new GeneralError("Error getting Double evaluation", e);
-    }
-  }
+    // targetingKey is always required
+    String key = context.getTargetingKey();
+    if (key == null || key.isEmpty()) throw new TargetingKeyMissingError();
 
-  @Override
-  public ProviderEvaluation<Value> getObjectEvaluation(String key, Value defaultTreatment, EvaluationContext evaluationContext) {
-    try {
-      String evaluated = evaluateTreatment(key, evaluationContext);
-      if (noTreatment(evaluated)) {
-        return constructProviderEvaluation(defaultTreatment, evaluated, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND);
-      }
-      Map<String, Object> rawMap = Serialization.stringToMap(evaluated);
-      Value value = mapToValue(rawMap);
-      return constructProviderEvaluation(value, evaluated);
-    } catch (OpenFeatureError e) {
-      throw e;
-    } catch (Exception e) {
-      throw new GeneralError("Error getting Object evaluation", e);
+    // eventName is always required
+    if (eventName == null || eventName.isBlank()) throw new GeneralError("Missing eventName, required to track");
+
+    // trafficType is always required
+    Value ttVal = context.getValue("trafficType");
+    String trafficType = (ttVal != null && !ttVal.isNull() && ttVal.isString()) ? ttVal.asString() : null;
+    if (trafficType == null || trafficType.isBlank()) throw new GeneralError("Missing trafficType variable, required to track");
+
+    double value = 0;
+    Map<String, Object> attributes = new HashMap<>();
+    if (details != null) {
+      Optional<Number> optionalValue = details.getValue();
+      value = optionalValue.orElse(0).doubleValue();
+      attributes = details.asObjectMap();
     }
+
+    client.track(key, trafficType, eventName, value, attributes);
   }
 
   public Map<String, Object> transformContext(EvaluationContext context) {
     return context.asObjectMap();
   }
 
-  private String evaluateTreatment(String key, EvaluationContext evaluationContext) {
+  private SplitResult evaluateTreatment(String key, EvaluationContext evaluationContext) {
     String id = evaluationContext.getTargetingKey();
     if (id == null || id.isEmpty()) {
       // targeting key is always required
       throw new TargetingKeyMissingError();
     }
     Map<String, Object> attributes = transformContext(evaluationContext);
-    return client.getTreatment(id, key, attributes);
+    return client.getTreatmentWithConfig(id, key, attributes);
   }
 
   private boolean noTreatment(String treatment) {
     return treatment == null || treatment.isEmpty() || treatment.equals("control");
   }
 
-  private <T> ProviderEvaluation<T> constructProviderEvaluation(T value, String variant) {
-    return constructProviderEvaluation(value, variant, Reason.TARGETING_MATCH, null);
+  private <T> ProviderEvaluation<T> constructProviderEvaluation(T value, String variant, ImmutableMetadata metadata) {
+    return constructProviderEvaluation(value, variant, Reason.TARGETING_MATCH, null, metadata);
   }
 
-  private <T> ProviderEvaluation<T> constructProviderEvaluation(T value, String variant, Reason reason, ErrorCode errorCode) {
+  private <T> ProviderEvaluation<T> constructProviderEvaluation(T value, String variant, Reason reason, ErrorCode errorCode, ImmutableMetadata metadata) {
     ProviderEvaluation.ProviderEvaluationBuilder<T> builder = ProviderEvaluation.builder();
     return builder
       .value(value)
+      .flagMetadata(metadata)
       .reason(reason.name())
       .variant(variant)
       .errorCode(errorCode)
