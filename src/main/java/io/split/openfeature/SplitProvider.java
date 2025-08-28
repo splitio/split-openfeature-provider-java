@@ -124,7 +124,7 @@ public class SplitProvider implements FeatureProvider {
     } catch (OpenFeatureError e) {
       throw e;
     } catch (Exception e) {
-      throw new GeneralError("Error getting " + typeLabel + " evaluation", e);
+      throw new GeneralError(String.format("Error getting %s evaluation", typeLabel), e);
     }
   }
 
