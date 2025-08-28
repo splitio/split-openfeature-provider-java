@@ -74,7 +74,7 @@
     <dependency>
       <groupId>dev.openfeature</groupId>
       <artifactId>sdk</artifactId>
-      <version>1.16.0</version>
+      <version>1.17.0</version>
     </dependency>
   </dependencies>
 
@@ -126,6 +126,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
         <configuration>
           <source>11</source>
           <target>11</target>
@@ -134,6 +135,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.11.3</version>
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -159,6 +161,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
+        <version>3.3.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>
