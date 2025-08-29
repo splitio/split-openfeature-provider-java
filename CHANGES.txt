@@ -7,4 +7,3 @@
 
 1.0.0
  - First release. Up to date with java sdk v0.1.0
-

@@ -20,11 +20,7 @@ jobs:
           - '11'
           - '19'
     env:
-      ARTIFACTORY_USER: ${{ secrets.ARTIFACTORY_USER }}
-      ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}
       MAVEN_OPTS: "-XX:InitialHeapSize=2G -XX:MaxHeapSize=2G -XX:+PrintCommandLineFlags -XX:ThreadStackSize=65536 -XX:-TieredCompilation -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
-      muteProps: "true"
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -32,14 +28,10 @@ jobs:
           fetch-depth: 0
 
       - name: Setup JDK ${{ matrix.jdk }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: 'adopt'
           java-version: ${{ matrix.jdk }}
 
-      - name: Setup Maven
-        run: cp .ci.settings.xml ${HOME}/.m2/settings.xml
-
       - name: Test
-        if: matrix.jdk == '8' && github.event_name == 'pull_request' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/development'
-        run: mvn --batch-mode clean install
+        run: mvn --batch-mode -T 2C -U clean package
