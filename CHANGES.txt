@@ -1,6 +1,6 @@
 1.2.0 (August XX, 2025)
  - Updated `io.split.client` dependency to 4.16.1
- - Updated `dev.openfeature` dependency to 1.16.0
+ - Updated `dev.openfeature` dependency to 1.17.0
 
 1.1.0
  - Up tp date with spec v0.5.0 and java sdk v0.3.1
