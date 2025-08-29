@@ -18,9 +18,10 @@ jobs:
       matrix:
         jdk:
           - '11'
-          - '19'
+          - '17'
+          - '21'
     env:
-      MAVEN_OPTS: "-XX:InitialHeapSize=2G -XX:MaxHeapSize=2G -XX:+PrintCommandLineFlags -XX:ThreadStackSize=65536 -XX:-TieredCompilation -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+      MAVEN_OPTS: "-Xms2g -Xmx2g -XX:+PrintCommandLineFlags -XX:ThreadStackSize=1024 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -32,6 +33,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: ${{ matrix.jdk }}
+          cache: 'maven'
 
       - name: Test
-        run: mvn --batch-mode -T 2C -U clean package
+        run: mvn --batch-mode -T 2C clean package
