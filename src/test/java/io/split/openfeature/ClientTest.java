@@ -37,14 +37,13 @@ public class ClientTest {
     try {
       SplitClientConfig config = SplitClientConfig.builder().splitFile("src/test/resources/split.yaml").build();
       SplitClient client = SplitFactoryBuilder.build("localhost", config).client();
-      openFeatureAPI.setProvider(new SplitProvider(client));
+      openFeatureAPI.setProviderAndWait(new SplitProvider(client));
     } catch (URISyntaxException | IOException e) {
       System.out.println("Unexpected Exception occurred initializing Split Provider.");
     }
     client = openFeatureAPI.getClient("Split Client");
-    EvaluationContext evaluationContext = new MutableContext();
     String targetingKey = "key";
-    evaluationContext.setTargetingKey(targetingKey);
+    EvaluationContext evaluationContext = new MutableContext(targetingKey);
     client.setEvaluationContext(evaluationContext);
   }
 
@@ -106,8 +105,7 @@ public class ClientTest {
 
     // if we override the evaluation context for this check to use a different key,
     // this should take priority, and therefore we should receive a treatment of off
-    EvaluationContext evaluationContext = new MutableContext();
-    evaluationContext.setTargetingKey("randomKey");
+    EvaluationContext evaluationContext = new MutableContext("randomKey");
     result = client.getBooleanValue("my_feature", true, evaluationContext);
     assertFalse(result);
   }
@@ -150,6 +148,7 @@ public class ClientTest {
     assertFalse(details.getValue());
     // the flag has a treatment of "off", this is returned as a value of false but the variant is still "off"
     assertEquals("off", details.getVariant());
+    assertNull(details.getFlagMetadata().getString("config"));
     assertNull(details.getErrorCode());
   }
 
@@ -161,17 +160,30 @@ public class ClientTest {
     assertEquals(32, details.getValue());
     // the flag has a treatment of "32", this is resolved to an integer but the variant is still "32"
     assertEquals("32", details.getVariant());
+    assertNull(details.getFlagMetadata().getString("config"));
     assertNull(details.getErrorCode());
   }
 
   @Test
-  public void getStringDetailsTest() {
+  public void getStringWithDetailsTest() {
+    FlagEvaluationDetails<String> details = client.getStringDetails("my_feature", "key");
+    assertEquals("my_feature", details.getFlagKey());
+    assertEquals(Reason.TARGETING_MATCH.name(), details.getReason());
+    assertEquals("on", details.getValue());
+    assertEquals("on", details.getVariant());
+    assertEquals("{\"desc\" : \"this applies only to ON treatment\"}", details.getFlagMetadata().getString("config"));
+    assertNull(details.getErrorCode());
+  }
+
+  @Test
+  public void getStringWithoutDetailsTest() {
     FlagEvaluationDetails<String> details = client.getStringDetails("some_other_feature", "blah");
     assertEquals("some_other_feature", details.getFlagKey());
     assertEquals(Reason.TARGETING_MATCH.name(), details.getReason());
     assertEquals("off", details.getValue());
     // the flag has a treatment of "off", since this is a string the variant is the same as the value
     assertEquals("off", details.getVariant());
+    assertNull(details.getFlagMetadata().getString("config"));
     assertNull(details.getErrorCode());
   }
 
@@ -183,6 +195,7 @@ public class ClientTest {
     assertEquals(mapToValue(Map.of("key", new Value("value"))), details.getValue());
     // the flag's treatment is stored as a string, and the variant is that raw string
     assertEquals("{\"key\": \"value\"}", details.getVariant());
+    assertNull(details.getFlagMetadata().getString("config"));
     assertNull(details.getErrorCode());
   }
 
@@ -194,6 +207,7 @@ public class ClientTest {
     assertEquals(32D, details.getValue());
     // the flag has a treatment of "32", this is resolved to a double but the variant is still "32"
     assertEquals("32", details.getVariant());
+    assertNull(details.getFlagMetadata().getString("config"));
     assertNull(details.getErrorCode());
   }
 
@@ -207,6 +221,7 @@ public class ClientTest {
     assertFalse(details.getValue());
     assertEquals(ErrorCode.PARSE_ERROR, details.getErrorCode());
     assertEquals(Reason.ERROR.name(), details.getReason());
+    assertNull(details.getFlagMetadata().getString("config"));
     assertNull(details.getVariant());
   }
 
@@ -218,8 +233,9 @@ public class ClientTest {
 
     FlagEvaluationDetails<Integer> details = client.getIntegerDetails("obj_feature", 10);
     assertEquals(10, details.getValue());
-    assertEquals(ErrorCode.PARSE_ERROR, details.getErrorCode());
+    assertEquals(ErrorCode.GENERAL, details.getErrorCode());
     assertEquals(Reason.ERROR.name(), details.getReason());
+    assertNull(details.getFlagMetadata().getString("config"));
     assertNull(details.getVariant());
   }
 
@@ -231,8 +247,9 @@ public class ClientTest {
 
     FlagEvaluationDetails<Double> details = client.getDoubleDetails("obj_feature", 10D);
     assertEquals(10D, details.getValue());
-    assertEquals(ErrorCode.PARSE_ERROR, details.getErrorCode());
+    assertEquals(ErrorCode.GENERAL, details.getErrorCode());
     assertEquals(Reason.ERROR.name(), details.getReason());
+    assertNull(details.getFlagMetadata().getString("config"));
     assertNull(details.getVariant());
   }
 
