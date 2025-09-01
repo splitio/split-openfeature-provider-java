@@ -37,7 +37,7 @@ public class ClientTest {
     try {
       SplitClientConfig config = SplitClientConfig.builder().splitFile("src/test/resources/split.yaml").build();
       SplitClient client = SplitFactoryBuilder.build("localhost", config).client();
-      openFeatureAPI.setProvider(new SplitProvider(client));
+      openFeatureAPI.setProviderAndWait(new SplitProvider(client));
     } catch (URISyntaxException | IOException e) {
       System.out.println("Unexpected Exception occurred initializing Split Provider.");
     }
