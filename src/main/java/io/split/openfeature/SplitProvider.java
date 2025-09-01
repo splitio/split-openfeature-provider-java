@@ -113,7 +113,7 @@ public class SplitProvider implements FeatureProvider {
       String treatment = evaluated.treatment();
       String config = evaluated.config();
       ImmutableMetadata metadata = ImmutableMetadata.builder().addString("config", config).build();
-      System.out.println(metadata.getString("config"));
+
       if (noTreatment(treatment)) {
         return constructProviderEvaluation(
                 defaultValue, treatment, Reason.DEFAULT, ErrorCode.FLAG_NOT_FOUND, metadata);

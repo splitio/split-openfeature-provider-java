@@ -55,12 +55,12 @@ Client client = api.getClient("CLIENT_NAME");
 EvaluationContext context = new MutableContext("TARGETING_KEY");
 Boolean boolValue = client.getBooleanValue("boolFlag", false, context);
 ```
-If the same targeting key is used repeatedly, the evaluation context may be set at the client level 
+If the same targeting key is used repeatedly, the evaluation context may be set at the client level
 ```java
 EvaluationContext context = new MutableContext("TARGETING_KEY");
 client.setEvaluationContext(context)
 ```
-or at the OpenFeatureAPI level 
+or at the OpenFeatureAPI level
 ```java
 EvaluationContext context = new MutableContext("TARGETING_KEY");
 OpenFeatureAPI.getInstance().setEvaluationContext(context)
@@ -68,7 +68,7 @@ OpenFeatureAPI.getInstance().setEvaluationContext(context)
 If the context was set at the client or api level, it is not required to provide it during flag evaluation.
 
 ## Submitting issues
- 
+
 The Split team monitors all issues submitted to this [issue tracker](https://github.com/splitio/split-openfeature-provider-java/issues). We encourage you to use this issue tracker to submit any bug reports, feedback, and feature enhancements. We'll do our best to respond in a timely manner.
 
 ## Contributing
@@ -78,13 +78,13 @@ Please see [Contributors Guide](CONTRIBUTORS-GUIDE.md) to find all you need to s
 Licensed under the Apache License, Version 2.0. See: [Apache License](http://www.apache.org/licenses/).
 
 ## About Split
- 
+
 Split is the leading Feature Delivery Platform for engineering teams that want to confidently deploy features as fast as they can develop them. Split’s fine-grained management, real-time monitoring, and data-driven experimentation ensure that new features will improve the customer experience without breaking or degrading performance. Companies like Twilio, Salesforce, GoDaddy and WePay trust Split to power their feature delivery.
- 
+
 To learn more about Split, contact hello@split.io, or get started with feature flags for free at https://www.split.io/signup.
- 
+
 Split has built and maintains SDKs for:
- 
+
 * .NET [Github](https://github.com/splitio/dotnet-client) [Docs](https://help.split.io/hc/en-us/articles/360020240172--NET-SDK)
 * Android [Github](https://github.com/splitio/android-client) [Docs](https://help.split.io/hc/en-us/articles/360020343291-Android-SDK)
 * Angular [Github](https://github.com/splitio/angular-sdk-plugin) [Docs](https://help.split.io/hc/en-us/articles/6495326064397-Angular-utilities)
@@ -105,8 +105,7 @@ Split has built and maintains SDKs for:
 * Ruby [Github](https://github.com/splitio/ruby-client) [Docs](https://help.split.io/hc/en-us/articles/360020673251-Ruby-SDK)
 
 For a comprehensive list of open source projects visit our [Github page](https://github.com/splitio?utf8=%E2%9C%93&query=%20only%3Apublic%20).
- 
-**Learn more about Split:**
- 
-Visit [split.io/product](https://www.split.io/product) for an overview of Split, or visit our documentation at [help.split.io](http://help.split.io) for more detailed information.
 
+**Learn more about Split:**
+
+Visit [split.io/product](https://www.split.io/product) for an overview of Split, or visit our documentation at [help.split.io](http://help.split.io) for more detailed information.
