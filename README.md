@@ -24,7 +24,7 @@ import dev.openfeature.sdk.OpenFeatureAPI;
 import io.split.openfeature.SplitProvider;
 
 OpenFeatureAPI api = OpenFeatureAPI.getInstance();
-api.setProvider(new SplitProvider("YOUR_API_KEY"));
+api.setProviderAndWait(new SplitProvider("YOUR_API_KEY"));
 ```
 
 If you are more familiar with Split or want access to other initialization options, you can provide a `SplitClient` to the constructor. See the [Split Java SDK Documentation](https://help.split.io/hc/en-us/articles/360020405151-Java-SDK) for more information.
@@ -42,7 +42,7 @@ SplitClientConfig config = SplitClientConfig.builder()
    .setBlockUntilReadyTimeout(10000)
    .build();
 SplitClient splitClient = SplitFactoryBuilder.build("YOUR_API_KEY", config).client();
-api.setProvider(new SplitProvider(splitClient));
+api.setProviderAndWait(new SplitProvider(splitClient));
 ```
 
 ## Use of OpenFeature with Split
