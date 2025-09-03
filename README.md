@@ -13,7 +13,7 @@ This SDK is compatible with Java 11 and higher.
 <dependency>
     <groupId>io.split.openfeature</groupId>
     <artifactId>split-openfeature-provider</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 ### Configure it
@@ -24,7 +24,7 @@ import dev.openfeature.sdk.OpenFeatureAPI;
 import io.split.openfeature.SplitProvider;
 
 OpenFeatureAPI api = OpenFeatureAPI.getInstance();
-api.setProvider(new SplitProvider("YOUR_API_KEY"));
+api.setProviderAndWait(new SplitProvider("YOUR_API_KEY"));
 ```
 
 If you are more familiar with Split or want access to other initialization options, you can provide a `SplitClient` to the constructor. See the [Split Java SDK Documentation](https://help.split.io/hc/en-us/articles/360020405151-Java-SDK) for more information.
@@ -42,7 +42,7 @@ SplitClientConfig config = SplitClientConfig.builder()
    .setBlockUntilReadyTimeout(10000)
    .build();
 SplitClient splitClient = SplitFactoryBuilder.build("YOUR_API_KEY", config).client();
-api.setProvider(new SplitProvider(splitClient));
+api.setProviderAndWait(new SplitProvider(splitClient));
 ```
 
 ## Use of OpenFeature with Split
@@ -66,6 +66,52 @@ EvaluationContext context = new MutableContext("TARGETING_KEY");
 OpenFeatureAPI.getInstance().setEvaluationContext(context)
 ````
 If the context was set at the client or api level, it is not required to provide it during flag evaluation.
+
+## Evaluate with details
+
+Use the get*Details(...) APIs to get the value and rich context (variant, reason, error code, metadata).
+This provider includes the Split treatment config as a raw JSON string under flagMetadata["config"]
+```java
+// boolean/string/number/object all have *Details variants:
+FlagEvaluationDetails<String> details =
+    client.getStringDetails("my-flag", "fallback", ctx);
+
+Metadata md = details.getFlagMetadata();
+if (md != null) {
+
+  Map<String, Value> meta = md.asMap();
+
+  Value config = meta.get("config"); // ← Split treatment config 
+}
+```
+
+## Tracking
+To use track(eventName, context, details) you must provide:
+
+- targetingKey on the EvaluationContext (non-blank).
+
+- trafficType in the context (string, e.g. "user" or "account").
+
+- A non-blank eventName.
+
+Optional:
+
+- details.value: numeric event value (defaults to 0).
+
+- details.properties: map of attributes (prefer primitives: string/number/boolean/null).
+
+Example:
+
+```java
+MutableContext ctx = new MutableContext("user-123");
+ctx.add("trafficType", new Value("user"));
+
+TrackingEventDetails details = new MutableTrackingEventDetails(19.99)
+    .add("plan", new Value("pro"))
+    .add("coupon", new Value("WELCOME10"));
+
+client.track("checkout.completed", ctx, details);
+```
 
 ## Submitting issues
 
