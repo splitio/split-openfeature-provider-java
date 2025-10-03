@@ -430,6 +430,7 @@ public class SplitProviderTest {
               "aa", new Value("bb"))))),
       "list", new Value(
         List.of(
+          new Value(1D),
           new Value(true),
           mapToValue(Map.of(
               "cc", new Value("dd")
@@ -439,7 +440,7 @@ public class SplitProviderTest {
             )))),
       "dateTime", new Value(instant)
     ));
-    String treatmentAsString = "{\"string\":\"blah\",\"int\":10,\"double\":100.0,\"bool\":true, \"struct\":{\"foo\":\"bar\",\"baz\":10,\"innerMap\":{\"aa\":\"bb\"}},\"list\":[true,{\"cc\":\"dd\"},{\"ee\":1}],\"dateTime\":\"2022-10-13T22:05:54.828Z\"}";
+    String treatmentAsString = "{\"string\":\"blah\",\"int\":10,\"double\":100.0,\"bool\":true, \"struct\":{\"foo\":\"bar\",\"baz\":10,\"innerMap\":{\"aa\":\"bb\"}},\"list\":[1,true,{\"cc\":\"dd\"},{\"ee\":1}],\"dateTime\":\"2022-10-13T22:05:54.828Z\"}";
 
     when(mockSplitClient.getTreatmentWithConfig(eq(key), eq(flagName), anyMap())).thenReturn(new SplitResult(treatmentAsString,""));
 
