@@ -63,7 +63,7 @@
 		<dependency>
 			<groupId>dev.openfeature</groupId>
 			<artifactId>sdk</artifactId>
-			<version>1.17.0</version>
+			<version>1.18.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
