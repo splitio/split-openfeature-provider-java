@@ -50,11 +50,6 @@
 			<version>4.18.1</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.14</version>
-		</dependency>
-		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>5.19.0</version>
@@ -65,16 +60,6 @@
 			<artifactId>sdk</artifactId>
 			<version>1.18.1</version>
 		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>2.20.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.20.0</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<pluginManagement>
@@ -84,6 +69,22 @@
 				<plugin>
 					<artifactId>maven-clean-plugin</artifactId>
 					<version>3.5.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.owasp</groupId>
+					<artifactId>dependency-check-maven</artifactId>
+					<version>12.1.6</version>
+					<configuration>
+						<nvdApiKey>41aa3456-48f3-466a-a8ea-db1e84caba36</nvdApiKey>
+						<failBuildOnCVSS>7</failBuildOnCVSS>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
 				</plugin>
 				<!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
 				<plugin>
