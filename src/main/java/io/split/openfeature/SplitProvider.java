@@ -158,6 +158,11 @@ public class SplitProvider implements FeatureProvider {
     return context.asObjectMap();
   }
 
+  @Override
+  public void shutdown() {
+    client.destroy();
+  }
+
   private SplitResult evaluateTreatment(String key, EvaluationContext evaluationContext) {
     String id = evaluationContext.getTargetingKey();
     if (id == null || id.isEmpty()) {

@@ -1,12 +1,10 @@
 package io.split.openfeature.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
+
 import dev.openfeature.sdk.ErrorCode;
 import dev.openfeature.sdk.exceptions.ParseError;
-
-import java.util.Map;
+import io.split.client.utils.Json;
 
 public class Serialization {
 
@@ -15,10 +13,8 @@ public class Serialization {
 
   public static Map<String, Object> stringToMap(final String obj) {
     try {
-      return new ObjectMapper()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .readValue(obj, Map.class);
-    } catch (JsonProcessingException e) {
+      return Json.fromJson(obj, Map.class);
+    } catch (Exception e) {
       throw new ParseError(ErrorCode.PARSE_ERROR.name());
     }
   }
