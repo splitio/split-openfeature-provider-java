@@ -420,23 +420,23 @@ public class SplitProviderTest {
     Instant instant = Instant.ofEpochMilli(1665698754828L);
     Value treatment = mapToValue(Map.of(
       "string", new Value("blah"),
-      "int", new Value(10),
+      "int", new Value(10D),
       "double", new Value(100D),
       "bool", new Value(true),
       "struct", mapToValue(Map.of(
           "foo", new Value("bar"),
-          "baz", new Value(10),
+          "baz", new Value(10D),
           "innerMap", mapToValue(Map.of(
               "aa", new Value("bb"))))),
       "list", new Value(
         List.of(
-          new Value(1),
+          new Value(1D),
           new Value(true),
           mapToValue(Map.of(
               "cc", new Value("dd")
             )),
           mapToValue(Map.of(
-              "ee", new Value(1)
+              "ee", new Value(1D)
             )))),
       "dateTime", new Value(instant)
     ));
@@ -523,6 +523,13 @@ public class SplitProviderTest {
             () -> provider.track("purchase", ctx, null));
     assertTrue(ex.getMessage().toLowerCase().contains("traffictype"));
     verifyNoInteractions(mockSplitClient);
+  }
+
+  @Test
+  public void destroySplitClientTest() {
+    SplitProvider provider = new SplitProvider(mockSplitClient);
+    provider.shutdown();
+    verify(mockSplitClient).destroy();
   }
 
   private Value mapToValue(Map<String, Value> map) {

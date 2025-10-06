@@ -30,14 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ClientTest {
   OpenFeatureAPI openFeatureAPI;
   Client client;
+  SplitClient splitClient;
 
   @BeforeEach
   public void init() {
     openFeatureAPI = OpenFeatureAPI.getInstance();
     try {
       SplitClientConfig config = SplitClientConfig.builder().splitFile("src/test/resources/split.yaml").build();
-      SplitClient client = SplitFactoryBuilder.build("localhost", config).client();
-      openFeatureAPI.setProviderAndWait(new SplitProvider(client));
+      splitClient = SplitFactoryBuilder.build("localhost", config).client();
+      openFeatureAPI.setProviderAndWait(new SplitProvider(splitClient));
     } catch (URISyntaxException | IOException e) {
       System.out.println("Unexpected Exception occurred initializing Split Provider.");
     }
@@ -265,6 +266,13 @@ public class ClientTest {
     assertEquals(ErrorCode.PARSE_ERROR, details.getErrorCode());
     assertEquals(Reason.ERROR.name(), details.getReason());
     assertNull(details.getVariant());
+  }
+
+  @Test
+  public void destroySplitClientTest() {
+    assertEquals("32", splitClient.getTreatment("key","int_feature"));
+    openFeatureAPI.shutdown();
+    assertEquals("control", splitClient.getTreatment("key","int_feature"));
   }
 
   private Value mapToValue(Map<String, Value> map) {
