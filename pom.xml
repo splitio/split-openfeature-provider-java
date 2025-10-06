@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.split.openfeature</groupId>
 	<artifactId>split-openfeature-provider</artifactId>
-	<version>1.2.0</version>
+	<version>1.2.1</version>
 	<name>split-openfeature-provider-java</name>
 	<description>Split OpenFeature Java Provider</description>
 	<url>www.split.io</url>

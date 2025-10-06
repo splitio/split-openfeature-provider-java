@@ -1,3 +1,6 @@
+1.2.1 (October 6, 2025)
+ - Updated dependencies to fix vulnerabilities.
+
 1.2.0 (September 3, 2025)
  - Updated `io.split.client` dependency to 4.16.1
  - Updated `dev.openfeature` dependency to 1.17.0
