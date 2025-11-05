@@ -76,13 +76,7 @@ This provider includes the Split treatment config as a raw JSON string under fla
 FlagEvaluationDetails<String> details =
     client.getStringDetails("my-flag", "fallback", ctx);
 
-Metadata md = details.getFlagMetadata();
-if (md != null) {
-
-  Map<String, Value> meta = md.asMap();
-
-  Value config = meta.get("config"); // ← Split treatment config 
-}
+String jsonConfig = details.getFlagMetadata().getString("config"); // ← Split treatment config
 ```
 
 ## Tracking
