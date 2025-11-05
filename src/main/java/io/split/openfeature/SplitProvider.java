@@ -17,15 +17,20 @@ import dev.openfeature.sdk.exceptions.TargetingKeyMissingError;
 import io.split.client.SplitClient;
 import io.split.client.api.SplitResult;
 import io.split.openfeature.utils.Serialization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class SplitProvider implements FeatureProvider {
+  private static final Logger _log = LoggerFactory.getLogger(SplitProvider.class);
 
   private static final String NAME = "Split";
 
@@ -33,6 +38,14 @@ public class SplitProvider implements FeatureProvider {
 
   public SplitProvider(SplitClient splitClient) {
     client = splitClient;
+    try {
+      this.client.blockUntilReady();
+    } catch (InterruptedException e) {
+      _log.error("Interrupted Exception: ", e);
+      Thread.currentThread().interrupt();
+    } catch (TimeoutException e) {
+      throw new GeneralError("Error occurred initializing the client.", e);
+    }
   }
 
   public SplitProvider(String apiKey) {
