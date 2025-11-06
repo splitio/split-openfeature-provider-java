@@ -73,7 +73,7 @@
 				<plugin>
 					<groupId>org.owasp</groupId>
 					<artifactId>dependency-check-maven</artifactId>
-					<version>12.1.6</version>
+					<version>12.1.8</version>
 					<configuration>
 						<nvdApiKey>41aa3456-48f3-466a-a8ea-db1e84caba36</nvdApiKey>
 						<failBuildOnCVSS>7</failBuildOnCVSS>
