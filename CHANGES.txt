@@ -1,3 +1,7 @@
+1.2.2 (November 6, 2025)
+ - Updated dependencies to fix vulnerabilities.
+ - Added Split client initialization with blockUntilReady() and error handling for safer startup.
+
 1.2.1 (October 6, 2025)
  - Updated dependencies to fix vulnerabilities.
  - Added support for the shutdown feature. 
