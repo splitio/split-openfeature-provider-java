@@ -36,7 +36,11 @@ public class ClientTest {
   public void init() {
     openFeatureAPI = OpenFeatureAPI.getInstance();
     try {
-      SplitClientConfig config = SplitClientConfig.builder().splitFile("src/test/resources/split.yaml").build();
+      SplitClientConfig config = SplitClientConfig
+              .builder()
+              .splitFile("src/test/resources/split.yaml")
+              .setBlockUntilReadyTimeout(10000)
+              .build();
       splitClient = SplitFactoryBuilder.build("localhost", config).client();
       openFeatureAPI.setProviderAndWait(new SplitProvider(splitClient));
     } catch (URISyntaxException | IOException e) {

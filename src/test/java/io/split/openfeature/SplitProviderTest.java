@@ -20,6 +20,7 @@ import org.mockito.MockitoAnnotations;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -470,10 +471,10 @@ public class SplitProviderTest {
   }
 
   @Test
-  public void trackWithDetailsTest() {
+  public void trackWithDetailsTest() throws InterruptedException, TimeoutException {
     SplitProvider provider = new SplitProvider(mockSplitClient);
 
-
+    verify(mockSplitClient).blockUntilReady();
     EvaluationContext ctx = new MutableContext(key).add("trafficType", "user");
     TrackingEventDetails details = new MutableTrackingEventDetails(42.5)
             .add("plan", new Value("pro"))
@@ -491,18 +492,19 @@ public class SplitProviderTest {
   }
 
   @Test
-  public void trackTargetingKeyErrorTest() {
+  public void trackTargetingKeyErrorTest() throws InterruptedException, TimeoutException {
     // Tracking without targetingKey should throw error
     SplitProvider provider = new SplitProvider(mockSplitClient);
     EvaluationContext ctx = new MutableContext().add("trafficType", "user");
 
     assertThrows(dev.openfeature.sdk.exceptions.TargetingKeyMissingError.class,
             () -> provider.track("purchase", ctx, null));
-    verifyNoInteractions(mockSplitClient);
+    verify(mockSplitClient).blockUntilReady();
+    verifyNoMoreInteractions(mockSplitClient);
   }
 
   @Test
-  public void trackEventNameErrorTest() {
+  public void trackEventNameErrorTest() throws InterruptedException, TimeoutException {
     // Tracking without eventName should throw error
     SplitProvider provider = new SplitProvider(mockSplitClient);
     EvaluationContext ctx = new MutableContext(key).add("trafficType", "user");
@@ -510,11 +512,12 @@ public class SplitProviderTest {
     GeneralError ex = assertThrows(GeneralError.class,
             () -> provider.track("  ", ctx, null)); // blank name
     assertTrue(ex.getMessage().toLowerCase().contains("eventname"));
-    verifyNoInteractions(mockSplitClient);
+    verify(mockSplitClient).blockUntilReady();
+    verifyNoMoreInteractions(mockSplitClient);
   }
 
   @Test
-  public void trackTrafficTypeErrorTest() {
+  public void trackTrafficTypeErrorTest() throws InterruptedException, TimeoutException {
     // Tracking without trafficType should throw error
     SplitProvider provider = new SplitProvider(mockSplitClient);
     EvaluationContext ctx = new MutableContext(key);
@@ -522,7 +525,8 @@ public class SplitProviderTest {
     GeneralError ex = assertThrows(GeneralError.class,
             () -> provider.track("purchase", ctx, null));
     assertTrue(ex.getMessage().toLowerCase().contains("traffictype"));
-    verifyNoInteractions(mockSplitClient);
+    verify(mockSplitClient).blockUntilReady();
+    verifyNoMoreInteractions(mockSplitClient);
   }
 
   @Test
