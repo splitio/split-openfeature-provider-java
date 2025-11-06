@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.split.openfeature</groupId>
 	<artifactId>split-openfeature-provider</artifactId>
-	<version>1.2.1</version>
+	<version>1.2.2</version>
 	<name>split-openfeature-provider-java</name>
 	<description>Split OpenFeature Java Provider</description>
 	<url>www.split.io</url>
@@ -47,7 +47,7 @@
 		<dependency>
 			<groupId>io.split.client</groupId>
 			<artifactId>java-client</artifactId>
-			<version>4.18.1</version>
+			<version>4.18.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -58,7 +58,7 @@
 		<dependency>
 			<groupId>dev.openfeature</groupId>
 			<artifactId>sdk</artifactId>
-			<version>1.18.1</version>
+			<version>1.18.2</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -73,7 +73,7 @@
 				<plugin>
 					<groupId>org.owasp</groupId>
 					<artifactId>dependency-check-maven</artifactId>
-					<version>12.1.6</version>
+					<version>12.1.8</version>
 					<configuration>
 						<nvdApiKey>41aa3456-48f3-466a-a8ea-db1e84caba36</nvdApiKey>
 						<failBuildOnCVSS>7</failBuildOnCVSS>
@@ -166,6 +166,12 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
 				<version>3.2.8</version>
+				<configuration>
+					<gpgArguments>
+					<arg>--pinentry-mode</arg>
+					<arg>loopback</arg>
+					</gpgArguments>
+				</configuration>
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>
