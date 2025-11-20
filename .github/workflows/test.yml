@@ -24,7 +24,7 @@ jobs:
       MAVEN_OPTS: "-Xms2g -Xmx2g -XX:+PrintCommandLineFlags -XX:ThreadStackSize=1024 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup JDK ${{ matrix.jdk }}
         uses: actions/setup-java@v5
